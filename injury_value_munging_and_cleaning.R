@@ -5,7 +5,7 @@ library(tidyverse)
 # Load WAR data, injury data 
 war_db <- read_csv("war_ratings_2018-04-12.csv")
 injury_db <- read_csv("NHL_Injury_Database_data.csv")
-##team_points_db <- read_csv()
+team_stats_db <- read_csv("NHL_team_data.csv")
 
 # Create a new WAR df with the required data 
 war82_db <- war_db %>%
@@ -46,6 +46,22 @@ war82_db <- war82_db %>%
            games_played, games_missed, toi, war_82) %>%
   ungroup()
 
+# Re-format war82_db team names
+war82_db$team_one[war82_db$team_one == "L.A"] <- "LAK"
+war82_db$team_two[war82_db$team_two == "L.A"] <- "LAK"
+war82_db$team_three[war82_db$team_three == "L.A"] <- "LAK"
+war82_db$team_four[war82_db$team_four == "L.A"] <- "LAK"
+
+war82_db$team_one[war82_db$team_one == "N.J"] <- "NJD"
+war82_db$team_two[war82_db$team_two == "N.J"] <- "NJD"
+war82_db$team_three[war82_db$team_three == "N.J"] <- "NJD"
+war82_db$team_four[war82_db$team_four == "N.J"] <- "NJD"
+
+war82_db$team_one[war82_db$team_one == "T.B"] <- "TBL"
+war82_db$team_two[war82_db$team_two == "T.B"] <- "TBL"
+war82_db$team_three[war82_db$team_three == "T.B"] <- "TBL"
+war82_db$team_four[war82_db$team_four == "T.B"] <- "TBL"
+
 # Create a new injury df with the required data
 clean_injury_db <- injury_db %>%
   select(chip = Chip, cap_hit = `Cap Hit`, games_missed_injury = `Games Missed`, injury_type = `Injury Type`, 
@@ -82,22 +98,6 @@ separate(player, c("last_name","first_name"), sep = ', ') %>%
   summarise(total_games_missed_injury = sum(games_missed_injury), total_chip = sum(chip)) %>%
   ungroup()
 
-# Re-format war82_db team names
-war82_db$team_one[war82_db$team_one == "L.A"] <- "LAK"
-war82_db$team_two[war82_db$team_two == "L.A"] <- "LAK"
-war82_db$team_three[war82_db$team_three == "L.A"] <- "LAK"
-war82_db$team_four[war82_db$team_four == "L.A"] <- "LAK"
-
-war82_db$team_one[war82_db$team_one == "N.J"] <- "NJD"
-war82_db$team_two[war82_db$team_two == "N.J"] <- "NJD"
-war82_db$team_three[war82_db$team_three == "N.J"] <- "NJD"
-war82_db$team_four[war82_db$team_four == "N.J"] <- "NJD"
-
-war82_db$team_one[war82_db$team_one == "T.B"] <- "TBL"
-war82_db$team_two[war82_db$team_two == "T.B"] <- "TBL"
-war82_db$team_three[war82_db$team_three == "T.B"] <- "TBL"
-war82_db$team_four[war82_db$team_four == "T.B"] <- "TBL"
-
 # Re-format clean_injury_db team names
 team_names_short <- c("ANA" = "Anaheim", "ARI/PHX" = "Arizona/Phoenix", "BOS" = "Boston", "BUF" = "Buffalo", "CGY" = "Calgary",
                       "CAR" = "Carolina", "CHI" = "Chicago", "COL" = "Colorado", "CBJ" = "Columbus", "DAL" = "Dallas",
@@ -116,39 +116,3 @@ clean_injury_db <- clean_injury_db %>%
 
 injury_value_db <- clean_injury_db %>%
   left_join(war82_db, by = c("first_initials", "last_name", "season"))
-
-# Examine players who don't have a WAR record (didn't meet event cut-off)
-##event_cutoff_cases <- injury_value_db %>% 
-  ##filter(is.na(war_82))
-
-# Assume for the time being that players without WAR records aren't relevant (didn't meet cut-off)
-injury_value_db <- injury_value_db %>% 
-  filter(!is.na(war_82)) %>%
-  group_by(first_name.x, last_name, position_new, season,
-         team, team_one, team_two, team_three, team_four,
-         games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war_82)
-
-# Examine players who were traded to determine if injured games were correctly attributed
-injury_value_db$team_two[is.na(injury_value_db$team_two)] <- "none"
-injury_value_db$team_three[is.na(injury_value_db$team_three)] <- "none"
-injury_value_db$team_four[is.na(injury_value_db$team_four)] <- "none"
-
-traded_players <- injury_value_db %>%
-  filter(team_two != "none")
-
-# Determine value lost to injury for each player
-# How to handle goalies? Ignore them for now?
-injury_value_db <- injury_value_db %>%
-  mutate(war_GP = war_82 / 82) %>%
-  mutate(value_lost_to_injury = total_games_missed_injury * war_GP)
-
-# Attribute injuries to correct teams
-team_injury_value_db <- injury_value_db %>%
-  filter(position_new != "G") %>%
-  group_by(team, season) %>%
-  summarise(team_injury_value_lost = sum(value_lost_to_injury),
-            team_chip = sum(total_chip),
-            man_games_lost = sum(total_games_missed_injury))
-
-team_injury_total <- team_injury_value_db %>%
-  summarise(injury_value_lost = sum(team_injury_value_lost))
