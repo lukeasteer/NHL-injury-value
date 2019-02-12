@@ -1,0 +1,57 @@
+---
+title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
+  in the NHL'
+---
+
+### Abstract
+
+### Introduction
+
+Not all injuries are created equal, which is a concept so intuitive that it hardly bears explaining. For example, you’d be hard pressed to find anyone who believes losing Connor McDavid for 4 weeks has the same impact as losing Iiro Pakarinen. However, the discussion of injuries in the NHL is most often centred around Man Games Lost (MGL), a basic statistic which limits the quality of analysis and discussion. 
+
+More modern statistics such as Cap Hit of Injured Player (CHIP)[^1] and Time-On-Ice of Injured Player (TOIIP) attempt to account for the value of the player that was lost to injury, but fall short, given that salary is influenced by player seniority and market factors that vary on a year-to-year basis, while time-on-ice is influenced by coaching staff bias and decisions. 
+
+Since the origin of hockey analytics, there have been attempts to develop single-value evaluation metrics, useful for comparison of total player value across different teams and seasons. Early examples include Ryder’s Player Contribution (2003)[^2], Awad’s Goals Versus Threshold (2009)[^3], MacDonald’s Adjusted Plus-Minus (2012)[^4], Schuckers and Curro’s Total Hockey Ratings (2013)[^5], Gramacy, Taddy, and Jensen’s Logistic Event Ratings (2013)[^6], and Thomas et al’s Mean Even Strength Hazard Model (2013)[^7]. 
+
+WAR, first developed by sabermetricians in baseball circles, is an evaluative metric intended to approximate a player’s impact in units of wins added, measured against what a replacement level player is expected to offer in the same circumstances[^8]. Recently, this framework has been applied in the context of the NHL by Thomas et al. (2014)[^9], Sprigings (2016)[^10], Perry (2017)[^11], and EvolvingWild Twins. Replacement level is not uniquely defined, but it is commonly equated to players earning a league-minimum salary. Given that is Perry’s version of WAR that is used here, and 
+
+In this paper, I argue that player value should be considered when evaluating injuries. The NHL is largely a meritocracy, and as such, a franchise’s medical resources... a team’s most productive players. Furthermore, a team’s most productive players also tend to play the most, and as such are subjected to a higher degree of injury risk, both in terms of fatigue-related, and exposure to deleterious on-ice events such as hits, and blocked shots. 
+
+In developing more nuanced metrics for evaluating value lost to injury, we’re able to more accurately identify teams with recurring injury problems, which is the first step towards developing appropriate solutions to these problems.
+
+### Method
+
+I examined 9 seasons of data, from the 2009-2010 season, to the 2017-2018 season. Injury data is sourced from nhlinjuryviz.blogspot.com, and WAR data is sourced from corsica.hockey. 
+
+Assumptions:
+
+* Perry does not differentiate between the regular season and playoffs when calculating WAR; all games are incorporated into a single value for the season. I’ve assumed that a) on aggregate, player performance is relatively stable between the regular season and the playoffs, and b) WAR is more reflective of regular season performance, due to the comparatively smaller number of playoff games in the sample. For these reasons, I’ve chosen not to undergo the labour-intensive process of re-calculating WAR/82.
+* In cases where a player missed an entire season due to injury, I’ve taken the average WAR of the seasons preceding and following the missed season. 
+* In cases where a player missed two consecutive seasons, or missed significant portions of two or more seasons in a row (i.e. < 20 GP), while still being considered active, I’ve taken the average WAR/82 of the seasons preceding and following the missed season.
+* In cases where a player missed two consecutive seasons, or missed significant portions of two or more seasons in a row (i.e. < 20 GP), while still being considered active, and then proceeded to retire, I’ve used a Marcel projection to determine their WAR/82 for the missed seasons. 
+* There are no cases where a player missed three consecutive seasons,  or missed significant portions of three or more seasons in a row (i.e. < 20 GP), while still being considered active. 
+* The quality of the replacement player is not considered; my aim is not to reward deep organizations, nor to penalize shallow ones; this is strictly an injury evaluation. 
+
+### Results
+
+### Discussion
+
+Aaron Kneeland’s research found no consistent correlation between travel, rest periods, and man games lost, though it should be noted that his study only examined two seasons of data (2014). 
+
+Goalie injuries are clearly most impactful; seems that goalie workload is a large, large issue that needs solving. 
+
+### Conclusion
+
+In conclusion, sports!
+
+[^1]: NHL Injury Viz, “NHL Injury Viz: Explainer,” http://nhlinjuryviz.blogspot.com/2016/12/explainer.html, (December 28, 2016).
+[^2]: Alan Ryder, “Player Contribution: A method for allocating credit for a team’s performance to the individual contributors on a hockey team,” http://www.hockeyanalytics.com/Research_files/Player_Contribution_System.pdf, (August 2014).
+[^3]: Tom Awad, “Numbers On Ice: Understanding GVT, Part 1,” http://www.hockeyprospectus.com/puck/article.php?articleid=233, (July 30, 2009).
+[^4]: Brian MacDonald, “Adjusted Plus-Minus for NHL Players using Ridge Regression with Goals, Shots, Fenwick, and Corsi,” Journal of Quantitative Analysis in Sports Vol. 8, Issue 3 (October 2012).
+[^5]: Michael Schuckers and James Curro, “Total Hockey Rating (THoR): A comprehensive statistical rating of National Hockey League forwards and defensemen based upon all on-ice events,” http://statsportsconsulting.com/main/wp-content/uploads/Schuckers_Curro_MIT_Sloan_THoR.pdf, (March 1, 2013).
+[^6]: Robert B. Gramacy, Matthew A. Taddy, and Shane T. Jensen, “Estimating Player Contribution in Hockey with Regularized Logistic Regression,” https://arxiv.org/abs/1209.5026, (Jan 12, 2013).
+[^7]: A.C. Thomas et al., “Competing process hazard function models for player ratings in ice hockey,”, The Annals of Applied Statistics Vol. 7, No. 3 (2013), 1497-1524.
+[^8]: Emmanuel Perry, “Wins Above Replacement,” http://www.corsica.hockey/misc/war_notebook.html, (April 21, 2018).
+[^9]: A.C. Thomas, “The Road to WAR Series: Index,” http://blog.war-on-ice.com/index.html%3Fp=429.html, (October 5, 2014).
+[^10]: Dawson Sprigings, “A Primer on @DTMAboutHeart’s WAR Model,” https://hockey-graphs.com/2016/10/24/a-primer-on-dtmabouthearts-war-model/, (October 24, 2016).
+[^11]: Emmanuel Perry, “The Art of WAR,” http://www.corsica.hockey/blog/2017/05/20/the-art-of-war/, (May 20, 2017).
