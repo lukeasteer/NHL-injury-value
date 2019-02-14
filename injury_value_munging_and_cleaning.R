@@ -3,7 +3,7 @@ install.packages("tidyverse")
 library(tidyverse)
 
 # Load WAR data, injury data 
-war_db <- read_csv("war_ratings_2018-04-12.csv")
+war_db <- read_csv("war_ratings_2019-02-14.csv")
 injury_db <- read_csv("NHL_Injury_Database_data.csv")
 team_stats_db <- read_csv("NHL_team_data.csv")
 
@@ -13,7 +13,8 @@ war82_db <- war_db %>%
   # Account for mid-season trades
   separate(team, c("team_one","team_two", "team_three", "team_four"), sep = '/') %>%
   # Create games_missed var, for comparison to games_missed_injury; account for absences for personal reasons, etc.
-  mutate(games_missed = 82 - games_played)
+  mutate(games_missed = 82 - games_played) %>%
+  arrange(player, season)
 
 # Re-format war82_db team names
 war82_db$team_one[war82_db$team_one == "L.A"] <- "LAK"
@@ -122,18 +123,18 @@ injury_value_db <- clean_injury_db %>%
 # Assume for the time being that players without WAR records aren't relevant (didn't meet cut-off)
 injury_value_db <- injury_value_db %>% 
   filter(!is.na(war_82)) %>%
-  select(first_name.x, last_name, position_new, season,
+  select(first_name = first_name.x, last_name, position_new, season,
            team, team_one, team_two, team_three, team_four,
            games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war_82)
 
-# Examine players who were traded to determine if injured games were correctly attributed
+# Manually examine players who were traded to determine if injured games were correctly attributed
 # STILL NEED TO DO THIS
 injury_value_db$team_two[is.na(injury_value_db$team_two)] <- "none"
 injury_value_db$team_three[is.na(injury_value_db$team_three)] <- "none"
 injury_value_db$team_four[is.na(injury_value_db$team_four)] <- "none"
 
-#traded_players <- injury_value_db %>%
-  #filter(team_two != "none")
+traded_players <- injury_value_db %>%
+  filter(team_two != "none")
 
 # Filter out goalies, because we won't be including those in the analysis
 skater_injury_value_db <- injury_value_db %>%
