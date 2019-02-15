@@ -13,8 +13,26 @@ war82_db <- war_db %>%
   # Account for mid-season trades
   separate(team, c("team_one","team_two", "team_three", "team_four"), sep = '/') %>%
   # Create games_missed var, for comparison to games_missed_injury; account for absences for personal reasons, etc.
-  mutate(games_missed = 82 - games_played) %>%
-  arrange(player, season)
+  mutate(games_missed = 82 - games_played) 
+
+weight_war <- function(last3_war) {
+  player_season <- as.numeric(stringr::str_split_fixed(last3_war, " ", 3))
+  if (is.na(player_season[2]))
+    player_season[1]
+  else if (is.na(player_season[3]))
+    weighted.mean(player_season[1:2], c(0.542, 0.458))
+  else
+    weighted.mean(player_season, c(0.417, 0.333, 0.25))
+}
+
+# Determine a weighted WAR for each player
+war82_db <- war82_db %>%
+  group_by(player) %>%
+  arrange(player, season) %>%
+  mutate(last3_war = paste(war_82, lag(war_82), lag(war_82, 2))) %>%
+  ungroup() %>%
+  rowwise() %>%
+  mutate(weighted_war_82 = weight_war(last3_war)) 
 
 # Re-format war82_db team names
 war82_db$team_one[war82_db$team_one == "L.A"] <- "LAK"
@@ -125,7 +143,7 @@ injury_value_db <- injury_value_db %>%
   filter(!is.na(war_82)) %>%
   select(first_name = first_name.x, last_name, position_new, season,
            team, team_one, team_two, team_three, team_four,
-           games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war_82)
+           games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war_82, weighted_war_82)
 
 # Manually examine players who were traded to determine if injured games were correctly attributed
 # STILL NEED TO DO THIS
@@ -142,7 +160,7 @@ skater_injury_value_db <- injury_value_db %>%
 
 # Determine WAR lost for each player season
 skater_injury_value_db <- skater_injury_value_db %>%
-  mutate(war_GP = war_82 / 82) %>%
+  mutate(war_GP = weighted_war_82 / 82) %>%
   mutate(war_lost= total_games_missed_injury * war_GP)
 
 # Attribute injuries to correct teams
