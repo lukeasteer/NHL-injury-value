@@ -192,4 +192,11 @@ team_injury_value_df <- skater_injury_value_df %>%
 
 # Create working df for analysis
 final_analysis_df <- team_injury_value_df %>%
-  left_join(clean_team_stats_df, by = c("team", "season"))
+  left_join(clean_team_stats_df, by = c("team", "season")) 
+
+final_analysis_df_test <- final_analysis_df %>%
+  mutate(team_war_change = team_war_lost - lag(team_war_lost)) %>%
+  mutate(team_chip_change = team_chip - lag(team_chip)) %>%
+  mutate(team_mgl_change = man_games_lost - lag(man_games_lost)) %>%
+  mutate(points_pct_change = points_pct - lag(points_pct)) %>%
+  filter(!is.na(points_pct_change))
