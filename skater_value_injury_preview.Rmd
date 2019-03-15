@@ -34,11 +34,15 @@ Assumptions:
 
 ### Results
 
+Age vs. WAR lost
+
 ### Discussion
 
 Aaron Kneeland’s research found no consistent correlation between travel, rest periods, and man games lost, though it should be noted that his study only examined two seasons of data (2014). 
 
 Goalie injuries are clearly most impactful; seems that goalie workload is a large, large issue that needs solving. 
+
+### Methods for injury avoidance and prevention
 
 ### Conclusion
 

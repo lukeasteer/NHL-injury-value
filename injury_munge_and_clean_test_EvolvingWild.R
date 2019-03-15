@@ -3,17 +3,17 @@ install.packages("tidyverse")
 library(tidyverse)
 
 # Load WAR data, injury data 
-war_df <- read_csv("war_ratings_2019-02-14.csv")
+skater_war_df <- read_csv("Evolving_Hockey_GAA_GAR_Skaters_2019-03-07.csv")
+team_war_df <- read_csv("Evolving_Hockey_League_GAR_2019-03-07.csv")
 injury_df <- read_csv("NHL_Injury_Database_data.csv")
-team_stats_df <- read_csv("NHL_team_data.csv")
+team_statistics_df <- read_csv("NHL_team_data.csv")
 
 # Create a new WAR df with the required data 
-war82_df <- war_df %>%
-  select(player = Player, season = Season, team = Team, games_played = GP, toi = TOI, war_82 = `WAR/82`) %>%
-  # Account for mid-season trades
-  separate(team, c("team_one","team_two", "team_three", "team_four"), sep = '/') %>%
+war_gp_df <- skater_war_df %>%
+  select(player, position, season, team = Team, games_played = GP, toi = TOI_all, war = WAR) %>%
   # Create games_missed var, for comparison to games_missed_injury; account for absences for personal reasons, etc.
-  mutate(games_missed = 82 - games_played) 
+  mutate(games_missed = 82 - games_played,
+         war_gp = war / games_played)
 
 # Determine a weighted WAR for each player
 weight_war <- function(last3_war) {
@@ -26,56 +26,42 @@ weight_war <- function(last3_war) {
     weighted.mean(player_season, c(0.417, 0.333, 0.25))
 }
 
-war82_df <- war82_df %>%
+war_gp_df <- war_gp_df %>%
   group_by(player) %>%
   arrange(player, season) %>%
-  mutate(last3_war = paste(war_82, lag(war_82), lag(war_82, 2))) %>%
+  mutate(last3_war = paste(war_gp, lag(war_gp), lag(war_gp, 2))) %>%
   ungroup() %>%
   rowwise() %>%
-  mutate(weighted_war_82 = weight_war(last3_war)) 
+  mutate(weighted_war_gp = weight_war(last3_war)) 
 
 # Re-format war82_df team names
-war82_df$team_one[war82_df$team_one == "L.A"] <- "LAK"
-war82_df$team_two[war82_df$team_two == "L.A"] <- "LAK"
-war82_df$team_three[war82_df$team_three == "L.A"] <- "LAK"
-war82_df$team_four[war82_df$team_four == "L.A"] <- "LAK"
-
-war82_df$team_one[war82_df$team_one == "N.J"] <- "NJD"
-war82_df$team_two[war82_df$team_two == "N.J"] <- "NJD"
-war82_df$team_three[war82_df$team_three == "N.J"] <- "NJD"
-war82_df$team_four[war82_df$team_four == "N.J"] <- "NJD"
-
-war82_df$team_one[war82_df$team_one == "T.B"] <- "TBL"
-war82_df$team_two[war82_df$team_two == "T.B"] <- "TBL"
-war82_df$team_three[war82_df$team_three == "T.B"] <- "TBL"
-war82_df$team_four[war82_df$team_four == "T.B"] <- "TBL"
+war_gp_df$team[war_gp_df$team == "L.A"] <- "LAK"
+war_gp_df$team[war_gp_df$team == "N.J"] <- "NJD"
+war_gp_df$team[war_gp_df$team == "T.B"] <- "TBL"
 
 # Re-format war82_df player names before separating into first_name, last_name
-war82_df$player[war82_df$player == "A.J..GREER"] <- "AJ.GREER"
-war82_df$player[war82_df$player == "B.J..CROMBEEN"] <- "BJ.CROMBEEN"
-war82_df$player[war82_df$player == "DENIS JR..GAUTHIER"] <- "DENIS JR.GAUTHIER"
-war82_df$player[war82_df$player == "J.F..BERUBE"] <- "JF.BERUBE"
-war82_df$player[war82_df$player == "J-F.JACQUES"] <- "JS.AUBIN"
-war82_df$player[war82_df$player == "J-P.DUMONT"] <- "JP.DUMONT"
-war82_df$player[war82_df$player == "J-SEBASTIAN.AUBIN"] <- "JS.AUBIN"
-war82_df$player[war82_df$player == "J.T..COMPHER"] <- "JT.COMPHER"
-war82_df$player[war82_df$player == "J.T..BROWN"] <- "JT.BROWN"
-war82_df$player[war82_df$player == "J.T..MILLER"] <- "JT.MILLER"
-war82_df$player[war82_df$player == "MARTIN.ST. LOUIS"] <- "MARTIN.ST LOUIS"
-war82_df$player[war82_df$player == "MARTIN.ST. PIERRE"] <- "MARTIN.ST PIERRE"
-war82_df$player[war82_df$player == "P.A..PARENTEAU"] <- "PA.PARENTEAU"
-war82_df$player[war82_df$player == "PIERRE-ALEX.PARENTEAU"] <- "PA.PARENTEAU"
-war82_df$player[war82_df$player == "P.K..SUBBAN"] <- "PK.SUBBAN"
-war82_df$player[war82_df$player == "P. J..AXELSSON"] <- "PJ.AXELSSON"
-war82_df$player[war82_df$player == "R.J..UMBERGER"] <- "RJ.UMBERGER"
-war82_df$player[war82_df$player == "T.J..GALIARDI"] <- "TJ.GALIARDI"
-war82_df$player[war82_df$player == "T.J..HENSICK"] <- "TJ.HENSICK"
-war82_df$player[war82_df$player == "T.J..OSHIE"] <- "TJ.OSHIE"
+war_gp_df$player[war_gp_df$player == "A.J..GREER"] <- "AJ.GREER"
+war_gp_df$player[war_gp_df$player == "B.J..CROMBEEN"] <- "BJ.CROMBEEN"
+war_gp_df$player[war_gp_df$player == "J.T..COMPHER"] <- "JT.COMPHER"
+war_gp_df$player[war_gp_df$player == "J.T..BROWN"] <- "JT.BROWN"
+war_gp_df$player[war_gp_df$player == "J.T..MILLER"] <- "JT.MILLER"
+war_gp_df$player[war_gp_df$player == "MARTIN.ST. LOUIS"] <- "MARTIN.ST LOUIS"
+war_gp_df$player[war_gp_df$player == "MARTIN.ST. PIERRE"] <- "MARTIN.ST PIERRE"
+war_gp_df$player[war_gp_df$player == "P.A..PARENTEAU"] <- "PA.PARENTEAU"
+war_gp_df$player[war_gp_df$player == "P.J..AXELSSON"] <- "PJ.AXELSSON"
+war_gp_df$player[war_gp_df$player == "P.K..SUBBAN"] <- "PK.SUBBAN"
+war_gp_df$player[war_gp_df$player == "R.J..UMBERGER"] <- "RJ.UMBERGER"
+war_gp_df$player[war_gp_df$player == "T.J..GALIARDI"] <- "TJ.GALIARDI"
+war_gp_df$player[war_gp_df$player == "T.J..HENSICK"] <- "TJ.HENSICK"
+war_gp_df$player[war_gp_df$player == "T.J..OSHIE"] <- "TJ.OSHIE"
+
+#hyphen_names <- EW_war_gp_df %>%
+  #filter(str_detect(player, '-'))
 
 # Separate war82_df player names into first_name, last_name
-war82_df <- war82_df %>%
+war_gp_df <- war_gp_df %>%
   separate(player, c("first_name","last_name"), sep = '\\.') %>%
-  # Create first_initials var for join w/ clean_injury_db
+  # Create first_initials var for join w/ player_injury_df
   mutate(first_initials = substr(first_name, 1, 2)) 
 
 # Create a new injury df with the required data
@@ -112,13 +98,14 @@ player_injury_df$player[player_injury_df$player == "Galiardi, T.J."] <- "Galiard
 player_injury_df$player[player_injury_df$player == "Oshie, T.J."] <- "Oshie, TJ"
 
 player_injury_df <- player_injury_df %>%  
-separate(player, c("last_name","first_name"), sep = ', ') %>%
+  separate(player, c("last_name","first_name"), sep = ', ') %>%
   mutate(last_name = str_to_upper(last_name)) %>%
   mutate(first_name = str_to_upper(first_name)) %>%
   mutate(first_initials = substr(first_name, 1, 2)) %>%
   # Re-format season
   separate(season, c("start_year","end_year"), sep = '/') %>%
-  mutate(season = paste0(start_year, '-20', end_year)) %>%
+  mutate(season = paste0(start_year, '20', end_year)) %>%
+  mutate(season = as.integer(season)) %>%
   # Re-format position; split into position and status; blanks accounts for weird formatting issue where there isn't an NA
   separate(position, c("position_new", "status", "blanks"), sep = '"') %>%
   # Aggregate injuries on a per-season basis 
@@ -127,60 +114,47 @@ separate(player, c("last_name","first_name"), sep = ', ') %>%
   ungroup()
 
 # Create a new team stats df with the required data 
-team_level_statistics_df <- team_stats_df %>%
-  select(team = `X2`, season = `Season`, avg_age = `AvAge`, points = `PTS`, points_pct = `PTS%`) 
+team_level_statistics_df <- team_statistics_df %>%
+  select(team = `X2`, season = `Season`, avg_age = `AvAge`, points = `PTS`, points_pct = `PTS%`) %>%
+  # Re-format season
+  separate(season, c("start_year","end_year"), sep = '-') %>%
+  mutate(season = paste0(start_year, end_year)) %>%
+  mutate(season = as.integer(season)) %>%
+  select(team, season, avg_age, points, points_pct)
 
 # Re-format team_level_statistics_df team names
 team_names_short2 <- c("ANA" = "Anaheim Ducks", "ARI/PHX" = "Arizona Coyotes", "ARI/PHX" = "Phoenix Coyotes", "BOS" = "Boston Bruins", 
-                      "BUF" = "Buffalo Sabres", "CGY" = "Calgary Flames", "CAR" = "Carolina Hurricanes", "CHI" = "Chicago Blackhawks", 
-                      "COL" = "Colorado Avalanche", "CBJ" = "Columbus Blue Jackets", "DAL" = "Dallas Stars", "DET" = "Detroit Red Wings", 
-                      "EDM" = "Edmonton Oilers", "FLA" = "Florida Panthers", "LAK" = "Los Angeles Kings", "MIN" = "Minnesota Wild",
-                      "MTL" = "Montreal canadiens", "NSH" = "Nashville Predators", "NJD" = "New Jersey Deviles", "NYI" = "New York Islanders", 
-                      "NYR" = "New York Rangers", "OTT" = "Ottawa Senators", "PHI" = "Philadelphia Flyers", "PIT" = "Pittsburgh Penguins", 
-                      "SJS" = "San Jose Sharks", "STL" = "St. Louis Blues", "TBL" = "Tampa Bay Lightning", "TOR" = "Toronto Maple Leafs", 
-                      "VAN" = "Vancouver Canucks", "VGK" = "Vegas Golden Knights", "WSH" = "Washington Capitals", "WPG/ATL" = "Winnipeg Jets", 
-                      "WPG/ATL" = "Atlanta Thrashers")
+                       "BUF" = "Buffalo Sabres", "CGY" = "Calgary Flames", "CAR" = "Carolina Hurricanes", "CHI" = "Chicago Blackhawks", 
+                       "COL" = "Colorado Avalanche", "CBJ" = "Columbus Blue Jackets", "DAL" = "Dallas Stars", "DET" = "Detroit Red Wings", 
+                       "EDM" = "Edmonton Oilers", "FLA" = "Florida Panthers", "LAK" = "Los Angeles Kings", "MIN" = "Minnesota Wild",
+                       "MTL" = "Montreal canadiens", "NSH" = "Nashville Predators", "NJD" = "New Jersey Deviles", "NYI" = "New York Islanders", 
+                       "NYR" = "New York Rangers", "OTT" = "Ottawa Senators", "PHI" = "Philadelphia Flyers", "PIT" = "Pittsburgh Penguins", 
+                       "SJS" = "San Jose Sharks", "STL" = "St. Louis Blues", "TBL" = "Tampa Bay Lightning", "TOR" = "Toronto Maple Leafs", 
+                       "VAN" = "Vancouver Canucks", "VGK" = "Vegas Golden Knights", "WSH" = "Washington Capitals", "WPG/ATL" = "Winnipeg Jets", 
+                       "WPG/ATL" = "Atlanta Thrashers")
 
 team_level_statistics_df$team <- names(team_names_short2)[match(team_level_statistics_df$team, team_names_short2)]
 
 team_level_statistics_df <- team_level_statistics_df %>%
   arrange(team, season)
 
-# Filter retired players, goaltenders, create injury value db
+# Filter retired players, create injury value db
 player_injury_df$status[is.na(player_injury_df$status)] <- "active"
 player_injury_df <- player_injury_df %>% 
   filter(status == "active")
 
 injury_value_df <- player_injury_df %>%
-  left_join(war82_df, by = c("first_initials", "last_name", "season"))
+  left_join(war_gp_df, by = c("first_initials", "last_name", "season"))
 
 # Assume for the time being that players without WAR records aren't relevant (didn't meet cut-off)
 injury_value_df <- injury_value_df %>% 
-  filter(!is.na(war_82)) %>%
-  select(first_name = first_name.x, last_name, position_new, season,
-           team, team_one, team_two, team_three, team_four,
-           games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war_82, weighted_war_82)
-
-# Manually examine players who were traded to determine if injured games were correctly attributed
-# STILL NEED TO DO THIS
-injury_value_df$team_two[is.na(injury_value_df$team_two)] <- "none"
-injury_value_df$team_three[is.na(injury_value_df$team_three)] <- "none"
-injury_value_df$team_four[is.na(injury_value_df$team_four)] <- "none"
-
-traded_players <- injury_value_df %>%
-  filter(team_two != "none")
-
-# Filter out goalies, because we won't be including those in the analysis
-skater_injury_value_df <- injury_value_df %>%
-  filter(position_new != "G")
-
-# Determine WAR lost for each player season
-skater_injury_value_df <- skater_injury_value_df %>%
-  mutate(war_GP = weighted_war_82 / 82) %>%
-  mutate(war_lost = total_games_missed_injury * war_GP)
+  filter(!is.na(war_gp)) %>%
+  select(first_name = first_name.x, last_name, position = position_new, season, team = team.x, games_played, games_missed, total_games_missed_injury, 
+         cap_hit, total_chip, toi, war_gp, weighted_war_gp) %>%
+  mutate(war_lost = total_games_missed_injury * weighted_war_gp)
 
 # Attribute injuries to correct teams
-team_injury_value_df <- skater_injury_value_df %>%
+team_injury_value_df <- injury_value_df %>%
   group_by(team, season) %>%
   summarise(team_war_lost = sum(war_lost),
             team_chip = sum(total_chip),
