@@ -2,7 +2,7 @@
 title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
   in the NHL'
 author: "Luke Steer (@lukeasteer)"
-date: "March 27, 2019"
+date: "April 1, 2019"
 output:
   html_document:
     theme: default
@@ -17,7 +17,11 @@ Since the origin of hockey analytics, there have been attempts to develop single
 
 WAR, first developed by sabermetricians in baseball circles, is an evaluative metric intended to approximate a player’s impact in units of wins added, measured against what a replacement level player would be expected to offer in the same circumstances[^8]. Recently, this framework has been applied in the context of the NHL by Thomas et al. (2014)[^9], Sprigings (2016)[^10], Perry (2017)[^11], and Solberg and Solberg (2018)[^12]. For the purposes of this evaluation, I have used Perry's version of WAR as a measurement of player value. Replacement level is not uniquely defined, but it is commonly equated to players earning a league-minimum salary, and Perry's WAR adopts this definition.
 
-In this paper, I posit that player value should be considered when evaluating injuries. A team’s most productive players tend to play the most, and as such are subjected to a higher degree of injury risk, both in terms of overuse injuries and exposure to deleterious on-ice events such as hits and blocked shots. However, it is common for elite players to receive special or preferential medical treatment that should, in theory, mitigate their injury risk to some extent. An efficient medical staff is one that is able to identify risk factors and reduce training load and exposure prior to injury, while also helping players who have been injured return to action more successfully, ultimately improving the player's availability, performance, and total output. In developing more nuanced metrics for evaluating value lost to injury, we’re able to more accurately identify teams with recurring injury problems, which is the first step towards developing appropriate solutions to these problems.
+[insert figure]
+
+In this paper, I posit that player value should be considered when evaluating injuries. Team strength, in terms of player WAR, and team points percentage were highly correlated for the seasons examined in this study (Adjusted R-squared = 0.6576). This finding is supported by Cam Lawrence's 2015 study[^13], which found that team strength, in terms of Spriging's Goals Above Replacement, was highly correlated with team points (R2 = 0.7231) for seasons between 2009-2010 and 2014-2015. As such, it stands to reason that losing stronger players would have an impact on team points percentage.
+
+Furthermore, accounting for value lost to injury enables analysis of medical staff efficacy. A team’s most productive players tend to play the most, and as such are subjected to a higher degree of injury risk, both in terms of overuse injuries and exposure to deleterious on-ice events such as hits and blocked shots. However, it is common for elite players to receive special or preferential medical treatment that should, in theory, mitigate their injury risk to some extent. An efficient medical staff is one that is able to identify risk factors and reduce training load and exposure prior to injury, while also helping players who have been injured return to action more successfully, ultimately improving the player's availability, performance, and total output. In developing more nuanced metrics for evaluating value lost to injury, we’re able to more accurately identify teams with recurring injury problems, which is the first step towards developing appropriate solutions to these problems.
 
 ### Method
 
@@ -45,7 +49,7 @@ team_stats_df <- read_csv("NHL_team_data.csv")
 ```{r warning=FALSE}
 # Create a new WAR df with the required data 
 war82_df <- war_df %>%
-  select(player = Player, season = Season, team = Team, games_played = GP, toi = TOI, war_82 = `WAR/82`) %>%
+  dplyr::select(player = Player, season = Season, team = Team, games_played = GP, toi = TOI, war_82 = `WAR/82`, war = WAR) %>%
   # Account for mid-season trades
   separate(team, c("team_one","team_two", "team_three", "team_four"), sep = '/') %>%
   # Create games_missed var, for comparison to games_missed_injury; account for absences for personal reasons, etc.
@@ -71,20 +75,44 @@ war82_df <- war82_df %>%
   mutate(weighted_war_82 = weight_war(last3_war)) 
 
 # Re-format war82_df team names
-war82_df$team_one[war82_df$team_one == "L.A"] <- "LAK"
-war82_df$team_two[war82_df$team_two == "L.A"] <- "LAK"
-war82_df$team_three[war82_df$team_three == "L.A"] <- "LAK"
-war82_df$team_four[war82_df$team_four == "L.A"] <- "LAK"
+team_names_short1 <- c("ANA" = "ANA",
+                       "ARI/PHX" = "ARI", 
+                       "ARI/PHX" = "PHX",
+                       "BOS" = "BOS", 
+                       "BUF" = "BUF", 
+                       "CGY" = "CGY", 
+                       "CAR" = "CAR", 
+                       "CHI" = "CHI", 
+                       "COL" = "COL", 
+                       "CBJ" = "CBJ", 
+                       "DAL" = "DAL", 
+                       "DET" = "DET", 
+                       "EDM" = "EDM", 
+                       "FLA" = "FLA", 
+                       "LAK" = "L.A",
+                       "MIN" = "MIN",
+                       "MTL" = "MTL", 
+                       "NSH" = "NSH",
+                       "NJD" = "N.J",
+                       "NYI" = "NYI", 
+                       "NYR" = "NYR", 
+                       "OTT" = "OTT", 
+                       "PHI" = "PHI", 
+                       "PIT" = "PIT", 
+                       "SJS" = "S.J",
+                       "STL" = "STL",
+                       "TBL" = "T.B",
+                       "TOR" = "TOR",
+                       "VAN" = "VAN", 
+                       "VGK" = "VGK", 
+                       "WSH" = "WSH",
+                       "WPG/ATL" = "WPG", 
+                       "WPG/ATL" = "ATL")
 
-war82_df$team_one[war82_df$team_one == "N.J"] <- "NJD"
-war82_df$team_two[war82_df$team_two == "N.J"] <- "NJD"
-war82_df$team_three[war82_df$team_three == "N.J"] <- "NJD"
-war82_df$team_four[war82_df$team_four == "N.J"] <- "NJD"
-
-war82_df$team_one[war82_df$team_one == "T.B"] <- "TBL"
-war82_df$team_two[war82_df$team_two == "T.B"] <- "TBL"
-war82_df$team_three[war82_df$team_three == "T.B"] <- "TBL"
-war82_df$team_four[war82_df$team_four == "T.B"] <- "TBL"
+war82_df$team_one <- names(team_names_short1)[match(war82_df$team_one, team_names_short1)]
+war82_df$team_two <- names(team_names_short1)[match(war82_df$team_two, team_names_short1)]
+war82_df$team_three <- names(team_names_short1)[match(war82_df$team_three, team_names_short1)]
+war82_df$team_four <- names(team_names_short1)[match(war82_df$team_four, team_names_short1)]
 
 # Re-format war82_df player names before separating into first_name, last_name
 war82_df$player[war82_df$player == "A.J..GREER"] <- "AJ.GREER"
@@ -112,17 +140,17 @@ war82_df$player[war82_df$player == "T.J..OSHIE"] <- "TJ.OSHIE"
 war82_df <- war82_df %>%
   separate(player, c("first_name","last_name"), sep = '\\.') %>%
   # Create first_initials var for join w/ clean_injury_db
-  mutate(first_initials = substr(first_name, 1, 2)) 
+  mutate(first_initials = substr(first_name, 1, 2))
 ```
 
 ```{r warning=FALSE}
 # Create a new injury df with the required data
 player_injury_df <- injury_df %>%
-  select(chip = Chip, cap_hit = `Cap Hit`, games_missed_injury = `Games Missed`, injury_type = `Injury Type`, 
+  dplyr::select(chip = Chip, cap_hit = `Cap Hit`, games_missed_injury = `Games Missed`, injury_type = `Injury Type`, 
          player = Player, position = Position, season = Season, team = Team, -`Number of Records`)
 
 # Re-format player_injury_df team names
-team_names_short <- c("ANA" = "Anaheim", 
+team_names_short2 <- c("ANA" = "Anaheim", 
                       "ARI/PHX" = "Arizona/Phoenix", 
                       "BOS" = "Boston", 
                       "BUF" = "Buffalo", 
@@ -154,7 +182,7 @@ team_names_short <- c("ANA" = "Anaheim",
                       "WSH" = "Washington", 
                       "WPG/ATL" = "Winnipeg/Atlanta")
 
-player_injury_df$team <- names(team_names_short)[match(player_injury_df$team, team_names_short)]
+player_injury_df$team <- names(team_names_short2)[match(player_injury_df$team, team_names_short2)]
 
 # Re-format player_injury_df player names before separating into first_name, last_name
 player_injury_df$player[player_injury_df$player == "Crombeen, B.J."] <- "Crombeen, BJ"
@@ -192,10 +220,10 @@ separate(player, c("last_name","first_name"), sep = ', ') %>%
 ```{r warning=FALSE}
 # Create a new team stats df with the required data 
 team_level_statistics_df <- team_stats_df %>%
-  select(team = `X2`, season = `Season`, avg_age = `AvAge`, points = `PTS`, points_pct = `PTS%`) 
+  dplyr::select(team = `X2`, season = `Season`, avg_age = `AvAge`, points = `PTS`, points_pct = `PTS%`) 
 
 # Re-format team_level_statistics_df team names
-team_names_short2 <- c("ANA" = "Anaheim Ducks", 
+team_names_short3 <- c("ANA" = "Anaheim Ducks", 
                        "ARI/PHX" = "Arizona Coyotes", 
                        "ARI/PHX" = "Phoenix Coyotes", 
                        "BOS" = "Boston Bruins", 
@@ -229,7 +257,7 @@ team_names_short2 <- c("ANA" = "Anaheim Ducks",
                        "WPG/ATL" = "Winnipeg Jets", 
                        "WPG/ATL" = "Atlanta Thrashers")
 
-team_level_statistics_df$team <- names(team_names_short2)[match(team_level_statistics_df$team, team_names_short2)]
+team_level_statistics_df$team <- names(team_names_short3)[match(team_level_statistics_df$team, team_names_short3)]
 
 team_level_statistics_df <- team_level_statistics_df %>%
   arrange(team, season)
@@ -247,9 +275,9 @@ injury_value_df <- player_injury_df %>%
 # Assume for the time being that players without WAR records aren't relevant (didn't meet cut-off)
 injury_value_df <- injury_value_df %>% 
   filter(!is.na(war_82)) %>%
-  select(first_name = first_name.x, last_name, position_new, season,
+  dplyr::select(first_name = first_name.x, last_name, position_new, season,
            team, team_one, team_two, team_three, team_four,
-           games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war_82, weighted_war_82)
+           games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war, war_82, weighted_war_82)
 
 # Manually examine players who were traded to determine if injured games were correctly attributed
 # STILL NEED TO DO THIS
@@ -291,6 +319,21 @@ team_performance_change_df <- team_performance_df %>%
 ### Results
 
 ```{r warning=FALSE, message=FALSE}
+
+# Create war df that includes goalie results for comparison to points_pct
+team_war_totals <- war82_df %>%
+  dplyr::select(team = team_one, season, war) %>%
+  group_by(team, season) %>%
+  summarise(team_war = sum(war))
+
+team_war_relationship <- team_war_totals %>%
+  left_join(team_level_statistics_df, by = c("team", "season")) %>%
+   filter(!is.na(points_pct))
+
+war_relations <- lm(points_pct ~ team_war, team_war_relationship)
+```
+
+```{r warning=FALSE, message=FALSE}
 library(MASS)
 
 model_1 <- rlm(points_pct_change ~ team_war_change, team_performance_change_df)
@@ -315,4 +358,5 @@ This analysis is also limited by its exclusion of goaltenders. This was purposef
 [^9]: A.C. Thomas, “The Road to WAR Series: Index,” http://blog.war-on-ice.com/index.html%3Fp=429.html, (October 5, 2014).
 [^10]: Dawson Sprigings, “A Primer on @DTMAboutHeart’s WAR Model,” https://hockey-graphs.com/2016/10/24/a-primer-on-dtmabouthearts-war-model/, (October 24, 2016).
 [^11]: Emmanuel Perry, “The Art of WAR,” http://www.corsica.hockey/blog/2017/05/20/the-art-of-war/, (May 20, 2017).
-[^12]: Luke Solberg and Josh Solberg, "Wins Above Replacement: Replacement Level, Decisions, Results, and Final Remarks," https://hockey-graphs.com/2019/01/18/wins-above-replacement-replacement-level-decisions-results-and-final-remarks-part-3/, (January 18, 2019)
+[^12]: Luke Younggren and Josh Younggren, "Wins Above Replacement: Replacement Level, Decisions, Results, and Final Remarks," https://hockey-graphs.com/2019/01/18/wins-above-replacement-replacement-level-decisions-results-and-final-remarks-part-3/, (January 18, 2019)
+[^13]: Cam Lawrence, "How to build a contender – Part 1: WAR, what is it good for?"", https://canucksarmy.com/2015/08/17/how-to-build-a-contender-part-1-war-what-is-it-good-for/, (August 17, 2015)

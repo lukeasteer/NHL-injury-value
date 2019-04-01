@@ -9,7 +9,7 @@ team_stats_df <- read_csv("NHL_team_data.csv")
 
 # Create a new WAR df with the required data 
 war82_df <- war_df %>%
-  select(player = Player, season = Season, team = Team, games_played = GP, toi = TOI, war_82 = `WAR/82`) %>%
+  dplyr::select(player = Player, season = Season, team = Team, games_played = GP, toi = TOI, war_82 = `WAR/82`) %>%
   # Account for mid-season trades
   separate(team, c("team_one","team_two", "team_three", "team_four"), sep = '/') %>%
   # Create games_missed var, for comparison to games_missed_injury; account for absences for personal reasons, etc.
