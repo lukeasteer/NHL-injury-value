@@ -2,26 +2,28 @@
 title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
   in the NHL'
 author: "Luke Steer (@lukeasteer)"
-date: "April 1, 2019"
+date: "April 2, 2019"
 output:
   html_document:
     theme: default
     highlight: default
 ---
 
-### "All players are equal, but some players are more equal than others""
+### All players are equal, but some players are more equal than others
 
-Not all player injuries in the NHL are equivalent, which is a concept so intuitive that it hardly bears explaining. For example, you’d be hard-pressed to find an analyst or fan who believes losing Iiro Pakarinen for four weeks is as impactful as losing Connor McDavid. However, the discussion of injuries in the NHL is most often centred around Man Games Lost (MGL), a basic statistic which limits the quality of analysis and discussion. More modern statistics such as Cap Hit of Injured Player (CHIP)[^1] and Time-On-Ice of Injured Player (TOIIP) attempt to account for the value of the player that was lost to injury, but fall short, given that salary is influenced by player seniority and market factors that vary on a year-to-year basis, while time-on-ice is influenced by coaching staff bias and decision-making. 
+Not all player injuries in the NHL are equivalent, which is a concept so intuitive that it hardly bears explaining. For example, you’d be hard-pressed to find an analyst or fan who believes losing Kyle Brodziak for four weeks is as impactful to the Oilers as losing Connor McDavid. However, the discussion of injuries in the NHL is most often centred around Man Games Lost (MGL), a basic statistic which limits the quality of analysis.
 
-Since the origin of hockey analytics, there have been attempts to develop single-value evaluation metrics, useful for comparison of total player value across different teams and seasons. Early examples include Ryder’s Player Contribution (2003)[^2], Awad’s Goals Versus Threshold (2009)[^3], MacDonald’s Adjusted Plus-Minus (2012)[^4], Schuckers and Curro’s Total Hockey Ratings (2013)[^5], Gramacy, Taddy, and Jensen’s Logistic Event Ratings (2013)[^6], and Thomas et al’s Mean Even Strength Hazard Model (2013)[^7]. 
+Analysts will often reference MGL as a means of explaining a team's under-performance in a particular season, but rarely do they holistically evaluate which players were missing, and what value they would have been expected to provide. More modern statistics such as Cap Hit of Injured Player (CHIP)[^1] and Time-On-Ice of Injured Player (TOIIP) attempt to account for the value of the player that was lost to injury, but fall short, given that salary is influenced by player seniority and market factors that vary on a year-to-year basis, while time-on-ice is influenced by coaching staff bias and decision-making. 
 
-WAR, first developed by sabermetricians in baseball circles, is an evaluative metric intended to approximate a player’s impact in units of wins added, measured against what a replacement level player would be expected to offer in the same circumstances[^8]. Recently, this framework has been applied in the context of the NHL by Thomas et al. (2014)[^9], Sprigings (2016)[^10], Perry (2017)[^11], and Solberg and Solberg (2018)[^12]. For the purposes of this evaluation, I have used Perry's version of WAR as a measurement of player value. Replacement level is not uniquely defined, but it is commonly equated to players earning a league-minimum salary, and Perry's WAR adopts this definition.
+Since the origin of hockey analytics, there have been attempts to develop single-value evaluation metrics, which are useful for comparison of total player value across different teams and seasons. Early examples include Ryder’s Player Contribution (2003)[^2], Awad’s Goals Versus Threshold (2009)[^3], MacDonald’s Adjusted Plus-Minus (2012)[^4], Schuckers and Curro’s Total Hockey Ratings (2013)[^5], Gramacy, Taddy, and Jensen’s Logistic Event Ratings (2013)[^6], and Thomas et al’s Mean Even Strength Hazard Model (2013)[^7]. 
 
-[insert figure]
+Wins Above Replacement (WAR), first developed by sabermetricians in baseball circles, is an evaluative metric intended to approximate a player’s impact in units of wins added, measured against what a replacement level player would be expected to offer in the same circumstances[^8]. Replacement level is not uniquely defined, but it is commonly equated to players earning a league-minimum salary. Recently, this framework has been applied in the context of the NHL by Thomas et al. (2014)[^9], Sprigings (2016)[^10], Perry (2017)[^11], and Younggren and Younggren (2018)[^12]. For the purposes of this evaluation, I have used Perry's version of WAR as a measurement of player value.
 
-In this paper, I posit that player value should be considered when evaluating injuries. Team strength, in terms of player WAR, and team points percentage were highly correlated for the seasons examined in this study (Adjusted R-squared = 0.6576). This finding is supported by Cam Lawrence's 2015 study[^13], which found that team strength, in terms of Spriging's Goals Above Replacement, was highly correlated with team points (R2 = 0.7231) for seasons between 2009-2010 and 2014-2015. As such, it stands to reason that losing stronger players would have an impact on team points percentage.
+In this paper, I posit that player value in terms of WAR should be considered when evaluating injuries, given that differences in team WAR help explain differences in team performance. Team WAR and team points percentage were strongly correlated for the seasons examined in this study (Adjusted R-squared = 0.6576). This finding is supported by Cam Lawrence's 2015 study[^13], which found that team strength, in terms of Spriging's Goals Above Replacement, was strongly correlated with team points (R-squared = 0.7231) for seasons between 2009-2010 and 2014-2015. As such, we can assume that losing a player who is strongly rated by WAR would have a more significant impact on team performance than losing a player who is poorly rated by WAR. Accounting for player value during injury analysis better explains why teams had the records that they did.
 
-Furthermore, accounting for value lost to injury enables analysis of medical staff efficacy. A team’s most productive players tend to play the most, and as such are subjected to a higher degree of injury risk, both in terms of overuse injuries and exposure to deleterious on-ice events such as hits and blocked shots. However, it is common for elite players to receive special or preferential medical treatment that should, in theory, mitigate their injury risk to some extent. An efficient medical staff is one that is able to identify risk factors and reduce training load and exposure prior to injury, while also helping players who have been injured return to action more successfully, ultimately improving the player's availability, performance, and total output. In developing more nuanced metrics for evaluating value lost to injury, we’re able to more accurately identify teams with recurring injury problems, which is the first step towards developing appropriate solutions to these problems.
+Furthermore, accounting for value lost to injury enables basic analysis of sports science staff efficacy. A team’s most productive players tend to play the most, and as such are subjected to a higher degree of injury risk, both in terms of overuse injuries and exposure to deleterious on-ice events such as hits and blocked shots. However, it is common for elite players to receive special or preferential training and medical treatment that should, in theory, mitigate their injury risk to some extent. An efficient sports science team is one that is able to identify risk factors and reduce training load and exposure prior to injury, ultimately improving the player's availability, performance, and total output.
+
+A successful recovery and return to play post-injury is more strongly influenced by player physiology than specific treatment methods, but accurate injury identification is well within the realm of sports science staff responsibility. The more quickly an injury can be accurately diagnosed, the sooner the sports science staff can develop an appropriate recovery plan and plan the player's rehabilitation. Mistakes and misdiagnoses can be costly, for both the team and the player. The Pittsburgh Penguins infamously dismissed Dr. Charles Burke and the rest of their medical staff in July 2012 following the misdiagnosis of Sidney Crosby's concussion, and his ensuing health issues. While neither the Penguins nor Crosby have publicly linked the two events, it is difficult to believe that Burke's mistakes did not play a role in the Penguins' decision to move on from him. In developing more nuanced metrics for evaluating value lost to injury, we are able to more accurately identify teams with recurring injury problems, which is the first step towards developing appropriate solutions to these problems.
 
 ### Method
 
@@ -29,17 +31,17 @@ I examined 9 seasons of data, from the 2009-2010 season, through the 2017-2018 s
 
 Assumptions:
 
-* Perry does not differentiate between the regular season and playoffs when calculating WAR; all games are incorporated into a single value for the season. I’ve assumed that a) on aggregate, player performance is relatively stable between the regular season and the playoffs, and b) WAR is more reflective of regular season performance, due to the comparatively smaller number of playoff games in the sample. For these reasons, I’ve chosen not to undergo the labour-intensive process of re-calculating WAR/82.
-* In cases where a player missed an entire season due to injury, I’ve taken the average WAR of the seasons preceding and following the missed season. 
-* In cases where a player missed two consecutive seasons, or missed significant portions of two or more seasons in a row (i.e. < 20 GP), while still being considered active, I’ve taken the average WAR/82 of the seasons preceding and following the missed season.
-* In cases where a player missed two consecutive seasons, or missed significant portions of two or more seasons in a row (i.e. < 20 GP), while still being considered active, and then proceeded to retire, I’ve used a Marcel projection to determine their WAR/82 for the missed seasons. 
-* There are no cases where a player missed three consecutive seasons,  or missed significant portions of three or more seasons in a row (i.e. < 20 GP), while still being considered active. 
+* Perry does not differentiate between the regular season and playoffs when calculating WAR; all games are incorporated into a single value for the season. I’ve assumed that:
+    + On aggregate, player performance is relatively stable between the regular season and the playoffs. 
+    + WAR is more reflective of regular season performance, due to the comparatively smaller number of playoff games in the sample. 
 * The quality of the replacement player is not considered; my aim is not to reward deep organizations, nor to penalize shallow ones; this is strictly an injury evaluation.
 
 ```{r warning=FALSE, message=FALSE}
 # Install and load packages
 library(tidyverse)
+```
 
+```{r warning=FALSE}
 # Load WAR data, injury data 
 war_df <- read_csv("war_ratings_2019-02-14.csv")
 injury_df <- read_csv("NHL_Injury_Database_data.csv")
@@ -53,8 +55,12 @@ war82_df <- war_df %>%
   # Account for mid-season trades
   separate(team, c("team_one","team_two", "team_three", "team_four"), sep = '/') %>%
   # Create games_missed var, for comparison to games_missed_injury; account for absences for personal reasons, etc.
-  mutate(games_missed = 82 - games_played) 
+  mutate(games_missed = 82 - games_played)
+```
 
+A weighted WAR is calculated in order to stabilize results, particularly for players who missed significant time. Weighting is based on the Marcel projection method, and considers three seasons of results. So, for player-season n, the weighted WAR is calculated using results from player-seasons n, n-1, and n-2.
+
+```{r warning=FALSE}
 # Determine a weighted WAR for each player
 weight_war <- function(last3_war) {
   player_season <- as.numeric(stringr::str_split_fixed(last3_war, " ", 3))
@@ -73,7 +79,11 @@ war82_df <- war82_df %>%
   ungroup() %>%
   rowwise() %>%
   mutate(weighted_war_82 = weight_war(last3_war)) 
+```
 
+Team names and player names are then re-formatted, in order to facilitate clean joins later in the analysis. This will be done for all data frames.
+
+```{r warning=FALSE}
 # Re-format war82_df team names
 team_names_short1 <- c("ANA" = "ANA",
                        "ARI/PHX" = "ARI", 
@@ -316,8 +326,6 @@ team_performance_change_df <- team_performance_df %>%
   filter(!is.na(points_pct_change))
 ```
 
-### Results
-
 ```{r warning=FALSE, message=FALSE}
 
 # Create war df that includes goalie results for comparison to points_pct
@@ -329,14 +337,22 @@ team_war_totals <- war82_df %>%
 team_war_relationship <- team_war_totals %>%
   left_join(team_level_statistics_df, by = c("team", "season")) %>%
    filter(!is.na(points_pct))
-
-war_relations <- lm(points_pct ~ team_war, team_war_relationship)
 ```
+
+### Results
 
 ```{r warning=FALSE, message=FALSE}
 library(MASS)
 
-model_1 <- rlm(points_pct_change ~ team_war_change, team_performance_change_df)
+team_war_relationship_model <- lm(points_pct ~ team_war, team_war_relationship)
+summary(team_war_relationship_model)
+```
+
+I've elected to use a Robust Linear Model to lessen the influence of outliers.
+
+```{r warning=FALSE, message=FALSE}
+war_relationship_model <- rlm(points_pct_change ~ team_war_change, team_performance_change_df)
+summary(war_relationship_model)
 ```
 
 Age vs. WAR lost
@@ -346,6 +362,13 @@ Age vs. WAR lost
 Aaron Kneeland’s research found no consistent correlation between travel, rest periods, and man games lost, though it should be noted that his study only examined two seasons of data (2014). 
 
 This analysis is also limited by its exclusion of goaltenders. This was purposeful, given that the demands of the positions differ significantly, and injuries tend to be correspondingly different. However, goalie injuries are clearly impactful, and goaltender workload is a large, large issue that needs solving. 
+
+https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0201264
+https://bjsm.bmj.com/content/50/5/273
+
+### Acknowledgements 
+
+I'd like to thank Matt Barlowe, Matt Cane, Domenic Galamini Jr., Alex Novet, and Josh and Luke Younggren for graciously and patiently answering my questions at various points over the past year. I'd also like to shout out Manny Perry and NHL Injury Viz for their respective public work; hockey analytics is better for it.
 
 [^1]: NHL Injury Viz, “NHL Injury Viz: Explainer,” http://nhlinjuryviz.blogspot.com/2016/12/explainer.html, (December 28, 2016).
 [^2]: Alan Ryder, “Player Contribution: A method for allocating credit for a team’s performance to the individual contributors on a hockey team,” http://www.hockeyanalytics.com/Research_files/Player_Contribution_System.pdf, (August 2014).
@@ -358,5 +381,5 @@ This analysis is also limited by its exclusion of goaltenders. This was purposef
 [^9]: A.C. Thomas, “The Road to WAR Series: Index,” http://blog.war-on-ice.com/index.html%3Fp=429.html, (October 5, 2014).
 [^10]: Dawson Sprigings, “A Primer on @DTMAboutHeart’s WAR Model,” https://hockey-graphs.com/2016/10/24/a-primer-on-dtmabouthearts-war-model/, (October 24, 2016).
 [^11]: Emmanuel Perry, “The Art of WAR,” http://www.corsica.hockey/blog/2017/05/20/the-art-of-war/, (May 20, 2017).
-[^12]: Luke Younggren and Josh Younggren, "Wins Above Replacement: Replacement Level, Decisions, Results, and Final Remarks," https://hockey-graphs.com/2019/01/18/wins-above-replacement-replacement-level-decisions-results-and-final-remarks-part-3/, (January 18, 2019)
+[^12]: Josh Younggren and Luke Younggren, "Wins Above Replacement: Replacement Level, Decisions, Results, and Final Remarks," https://hockey-graphs.com/2019/01/18/wins-above-replacement-replacement-level-decisions-results-and-final-remarks-part-3/, (January 18, 2019)
 [^13]: Cam Lawrence, "How to build a contender – Part 1: WAR, what is it good for?"", https://canucksarmy.com/2015/08/17/how-to-build-a-contender-part-1-war-what-is-it-good-for/, (August 17, 2015)
