@@ -2,7 +2,7 @@
 title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
   in the NHL'
 author: "Luke Steer (@lukeasteer)"
-date: "March 26, 2019"
+date: "March 27, 2019"
 output:
   html_document:
     theme: default
@@ -11,17 +11,17 @@ output:
 
 ### "All players are equal, but some players are more equal than others""
 
-Not all player injuries in the NHL are equivalent, which is a concept so intuitive that it hardly bears explaining. For example, you’d be hard pressed to find anyone who believes losing Iiro Pakarinen for four weeks is as impactful as losing Connor McDavid. However, the discussion of injuries in the NHL is most often centred around Man Games Lost (MGL), a basic statistic which limits the quality of analysis and discussion. More modern statistics such as Cap Hit of Injured Player (CHIP)[^1] and Time-On-Ice of Injured Player (TOIIP) attempt to account for the value of the player that was lost to injury, but fall short, given that salary is influenced by player seniority and market factors that vary on a year-to-year basis, while time-on-ice is influenced by coaching staff bias and resulting decisions. 
+Not all player injuries in the NHL are equivalent, which is a concept so intuitive that it hardly bears explaining. For example, you’d be hard-pressed to find an analyst or fan who believes losing Iiro Pakarinen for four weeks is as impactful as losing Connor McDavid. However, the discussion of injuries in the NHL is most often centred around Man Games Lost (MGL), a basic statistic which limits the quality of analysis and discussion. More modern statistics such as Cap Hit of Injured Player (CHIP)[^1] and Time-On-Ice of Injured Player (TOIIP) attempt to account for the value of the player that was lost to injury, but fall short, given that salary is influenced by player seniority and market factors that vary on a year-to-year basis, while time-on-ice is influenced by coaching staff bias and decision-making. 
 
 Since the origin of hockey analytics, there have been attempts to develop single-value evaluation metrics, useful for comparison of total player value across different teams and seasons. Early examples include Ryder’s Player Contribution (2003)[^2], Awad’s Goals Versus Threshold (2009)[^3], MacDonald’s Adjusted Plus-Minus (2012)[^4], Schuckers and Curro’s Total Hockey Ratings (2013)[^5], Gramacy, Taddy, and Jensen’s Logistic Event Ratings (2013)[^6], and Thomas et al’s Mean Even Strength Hazard Model (2013)[^7]. 
 
-WAR, first developed by sabermetricians in baseball circles, is an evaluative metric intended to approximate a player’s impact in units of wins added, measured against what a replacement level player is expected to offer in the same circumstances[^8]. Recently, this framework has been applied in the context of the NHL by Thomas et al. (2014)[^9], Sprigings (2016)[^10], Perry (2017)[^11], and Solberg and Solberg[^12]. Replacement level is not uniquely defined, but it is commonly equated to players earning a league-minimum salary.  
+WAR, first developed by sabermetricians in baseball circles, is an evaluative metric intended to approximate a player’s impact in units of wins added, measured against what a replacement level player would be expected to offer in the same circumstances[^8]. Recently, this framework has been applied in the context of the NHL by Thomas et al. (2014)[^9], Sprigings (2016)[^10], Perry (2017)[^11], and Solberg and Solberg (2018)[^12]. For the purposes of this evaluation, I have used Perry's version of WAR as a measurement of player value. Replacement level is not uniquely defined, but it is commonly equated to players earning a league-minimum salary, and Perry's WAR adopts this definition.
 
-In this paper, I posit that player value should be considered when evaluating injuries. A team’s most productive players tend to play the most, and as such are subjected to a higher degree of injury risk, both in terms of overuse injuries and exposure to deleterious on-ice events such as hits and blocked shots. The NHL is also to some extent a meritocracy, and it is common for elite players to receive special or preferential medical treatment that should, in theory, mitigate these injury risks to some extent. An efficient medical staff is one that is able to identify risk factors and reduce training load and exposure prior to injury, while helping players who have been injured return to action more quickly, ultimately improving the player's availability and total output. In developing more nuanced metrics for evaluating value lost to injury, we’re able to more accurately identify teams with recurring injury problems, which is the first step towards developing appropriate solutions to these problems.
+In this paper, I posit that player value should be considered when evaluating injuries. A team’s most productive players tend to play the most, and as such are subjected to a higher degree of injury risk, both in terms of overuse injuries and exposure to deleterious on-ice events such as hits and blocked shots. However, it is common for elite players to receive special or preferential medical treatment that should, in theory, mitigate their injury risk to some extent. An efficient medical staff is one that is able to identify risk factors and reduce training load and exposure prior to injury, while also helping players who have been injured return to action more successfully, ultimately improving the player's availability, performance, and total output. In developing more nuanced metrics for evaluating value lost to injury, we’re able to more accurately identify teams with recurring injury problems, which is the first step towards developing appropriate solutions to these problems.
 
 ### Method
 
-I examined 9 seasons of data, from the 2009-2010 season, to the 2017-2018 season. Injury data is sourced from nhlinjuryviz.blogspot.com, and WAR data is sourced from corsica.hockey. 
+I examined 9 seasons of data, from the 2009-2010 season, through the 2017-2018 season. Injury data is sourced from nhlinjuryviz.blogspot.com, and WAR data is sourced from corsica.hockey. 
 
 Assumptions:
 
