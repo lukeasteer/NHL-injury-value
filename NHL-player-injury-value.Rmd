@@ -2,7 +2,7 @@
 title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
   in the NHL'
 author: "Luke Steer (@lukeasteer)"
-date: "April 4, 2019"
+date: "April 10, 2019"
 output:
   html_document:
     theme: default
@@ -19,7 +19,7 @@ Since the origin of hockey analytics, there have been attempts to develop single
 
 Wins Above Replacement (WAR), first developed by sabermetricians in baseball circles, is an evaluative metric intended to approximate a player’s impact in units of wins added, measured against what a replacement level player would be expected to offer in the same circumstances[^8]. Replacement level is not uniquely defined, but it is commonly equated to players earning a league-minimum salary. Recently, this framework has been applied in the context of the NHL by Thomas et al. (2014)[^9], Sprigings (2016)[^10], Perry (2017)[^11], and Younggren and Younggren (2018)[^12]. 
 
-Unsurprisingly, teams whose players produce more WAR in aggregate (team WAR) tend to have better records. Team WAR and team points percentage were strongly correlated for the seasons examined in this study (Adjusted R-squared = 0.6576). This finding is supported by Cam Lawrence's 2015 study[^13], which found that team strength, in terms of Spriging's Goals Above Replacement (a WAR sibling), was strongly correlated with team points (R-squared = 0.7231) for seasons between 2009-2010 and 2014-2015. As such, we can assume that losing a player who is highly valued by WAR would have a more significant impact on team performance than losing a player with lesser value. Clearly, player value in terms of WAR should be considered when evaluating injuries, given that differences in team WAR help explain differences in team performance. 
+Unsurprisingly, teams whose players produce more WAR in aggregate (team WAR) tend to have better records. Team WAR and team points percentage were strongly correlated for the seasons examined in this study (Adjusted R-squared = 0.6576). This finding is supported by Cam Lawrence's 2015 study[^13], which found that team strength, in terms of Spriging's Goals Above Replacement (a WAR sibling), was strongly correlated with team points for seasons between 2009-2010 and 2014-2015 (R-squared = 0.7231). As such, we can assume that losing a player who is highly valued by WAR would have a more significant impact on team performance than losing a player with lesser value. Clearly, player value in terms of WAR should be considered when evaluating injuries, given that differences in team WAR help explain differences in team performance. 
 
 Furthermore, accounting for value lost to injury when examining injury trends enables rudimentary analysis of sports science staff efficacy. A team’s most productive players tend to play the most and are subjected to a higher degree of injury risk, both in terms of overuse injuries, and exposure to damaging on-ice events such as hits and blocked shots. However, it is common for elite players to receive special or preferential training and medical treatment that should, in theory, mitigate their injury risk to some extent. An efficient sports science team is one that is able to identify risk factors and reduce training load and exposure prior to injury, ultimately improving the player's availability, performance, and total output. A successful recovery and return to play post-injury is more strongly influenced by player physiology than specific treatment methods, but accurate injury identification is also within the realm of sports science staff responsibility. The more quickly an injury can be accurately diagnosed, the sooner the sports science staff can develop an appropriate recovery plan and plan the player's rehabilitation. 
 
@@ -36,16 +36,23 @@ Assumptions:
     + WAR is more reflective of regular season performance due to the comparatively smaller number of playoff games in the sample. 
 * The quality of the replacement player was not considered. My aim is not to reward deep organizations, nor to penalize shallow ones; this is strictly an injury evaluation.
 
+Younggren and Younggren's version of WAR was also considered, and is superior in several ways; it encompasses regular season results exclusively, and its formatting conventions would have made analysis easier. However, Younggren and Younggren's WAR is meant to be descriptive of a player's performance in a single season, whereas Perry's emphasizes predictivity and better approximates true player talent. As such, Perry's version of WAR was the preferred option for this analysis.
+
 ```{r warning=FALSE, message=FALSE}
 # Load packages required for munging and cleaning
 library(tidyverse)
 ```
 
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 # Load WAR data, injury data, and team performance data into data frames
 war_df <- read_csv("war_ratings_2019-02-14.csv")
+colnames(war_df)
+
 injury_df <- read_csv("NHL_Injury_Database_data.csv")
+colnames(injury_df)
+
 team_stats_df <- read_csv("NHL_team_data.csv")
+colnames(team_stats_df)
 ```
 
 Required data was selected from the war_df data frame, and player trades and non-injury absences were accounted for. 
@@ -212,6 +219,7 @@ player_injury_df$player[player_injury_df$player == "Brown, J.T."] <- "Brown, JT"
 player_injury_df$player[player_injury_df$player == "Compher, J.T."] <- "Compher, JT"
 player_injury_df$player[player_injury_df$player == "Miller, J.T."] <- "Miller, JT"
 player_injury_df$player[player_injury_df$player == "Wyman, J.T."] <- "Wyman, JT"
+player_injury_df$player[player_injury_df$player == "St. Louis, Martin"] <- "St Louis, Martin"
 player_injury_df$player[player_injury_df$player == "Parenteau, P.A."] <- "Parenteau, PA"
 player_injury_df$player[player_injury_df$player == "Subban, P.K."] <- "Subban, PK"
 player_injury_df$player[player_injury_df$player == "Umberger, R.J."] <- "Umberger, RJ"
@@ -296,29 +304,15 @@ injury_value_df <- player_injury_df %>%
   left_join(war82_df, by = c("first_initials", "last_name", "season"))
 ```
 
-Players who were injured but didn't have a WAR record were then filtered. Manny's cut-off for WAR was x number of events. There players were manually examined to determine that there weren't any formatting issues.
+Players who were injured but didn't have a WAR record were then filtered. Manny's cut-off for WAR was x number of events. Players were manually examined to determine that there weren't any formatting issues.
 
 ```{r warning=FALSE}
-# Filter players who don't have a WAR record because they didn't meet the event cut-off
+# Filter players who don't have a WAR record because they didn't meet the 200 minutes  cut-off
 injury_value_df <- injury_value_df %>% 
   filter(!is.na(war_82)) %>%
   dplyr::select(first_name = first_name.x, last_name, position_new, season,
            team, team_one, team_two, team_three, team_four,
            games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war, war_82, weighted_war_82)
-
-# Select players who don't have a WAR record for manual examination, to determine if there were formatting issues
-```
-
-Traded players were manually examined, to determine if injured games were correctly attributed.
-
-```{r warning=FALSE}
-# Select players who were traded for manual examination, to determine if injured games were correctly attributed
-injury_value_df$team_two[is.na(injury_value_df$team_two)] <- "none"
-injury_value_df$team_three[is.na(injury_value_df$team_three)] <- "none"
-injury_value_df$team_four[is.na(injury_value_df$team_four)] <- "none"
-
-traded_players <- injury_value_df %>%
-  filter(team_two != "none")
 ```
 
 ```{r warning=FALSE}
@@ -327,7 +321,33 @@ player_injury_value_df <- injury_value_df %>%
   mutate(war_GP = weighted_war_82 / 82) %>%
   mutate(war_lost = total_games_missed_injury * war_GP)
 
-# Adjust goaltender games missed to injury to account for likely playing time
+# Determine a weighted games_played for each player
+weighted_gp <- function(last3_gp) {
+  player_season <- as.numeric(stringr::str_split_fixed(last3_gp, " ", 3))
+  if (is.na(player_season[2]))
+    player_season[1]
+  else if (is.na(player_season[3]))
+    weighted.mean(player_season[1:2], c(0.542, 0.458))
+  else
+    weighted.mean(player_season, c(0.417, 0.333, 0.25))
+}
+
+player_injury_value_df <- player_injury_value_df %>%
+  group_by(first_name, last_name) %>%
+  arrange(first_name, last_name, season) %>%
+  mutate(last3_gp = paste(games_played, lag(games_played), lag(games_played, 2))) %>%
+  ungroup() %>%
+  rowwise() %>%
+  mutate(weighted_games_played = weighted_gp(last3_gp))
+```
+
+This method isn't perfect. For example, it diminishes the impact of former back-ups who were acquired to be a started, and got hurt with their new team, as in the case of Antti Raanta 17/18. As mentioned previously, Perry's WAR data also includes playoff games, which inflates game played totals.
+
+```{r warning=FALSE}
+player_injury_value_df <- player_injury_value_df %>% 
+  mutate(war_lost = case_when(position_new == "G" & weighted_games_played <= 41 ~ 0.324 * war_lost,
+                              position_new == "G" & weighted_games_played > 41 ~ 0.676 * war_lost,
+                              T ~ war_lost))
 ```
 
 ```{r warning=FALSE}
@@ -335,8 +355,8 @@ player_injury_value_df <- injury_value_df %>%
 team_injury_value_df <- player_injury_value_df %>%
   group_by(team, season) %>%
   summarise(team_war_lost = sum(war_lost),
-            team_chip = sum(total_chip),
-            man_games_lost = sum(total_games_missed_injury))
+            team_chip_lost = sum(total_chip),
+            team_mgl_lost = sum(total_games_missed_injury))
 
 # Create working df for analysis
 team_performance_df <- team_injury_value_df %>%
@@ -344,8 +364,8 @@ team_performance_df <- team_injury_value_df %>%
 
 team_performance_change_df <- team_performance_df %>%
   mutate(team_war_change = team_war_lost - lag(team_war_lost)) %>%
-  mutate(team_chip_change = team_chip - lag(team_chip)) %>%
-  mutate(team_mgl_change = man_games_lost - lag(man_games_lost)) %>%
+  mutate(team_chip_change = team_chip_lost - lag(team_chip_lost)) %>%
+  mutate(team_mgl_change = team_mgl_lost - lag(team_mgl_lost)) %>%
   mutate(points_pct_change = points_pct - lag(points_pct)) %>%
   filter(!is.na(points_pct_change))
 ```
