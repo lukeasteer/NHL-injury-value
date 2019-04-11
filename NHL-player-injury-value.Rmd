@@ -2,7 +2,7 @@
 title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
   in the NHL'
 author: "Luke Steer (@lukeasteer)"
-date: "April 10, 2019"
+date: "April 11, 2019"
 output:
   html_document:
     theme: default
@@ -27,7 +27,7 @@ Mistakes and misdiagnoses can be costly, for both the team and the player. The P
 
 ### Method
 
-9 seasons of data were examined, from the 2009-2010 season through the 2017-2018 season. For the purposes of this evaluation, Perry's version of WAR was used as a measurement of player value, and data was sourced from corsica.hockey. Injury data, including CHIP, was sourced from nhlinjuryviz.blogspot.com. Team performance data was sourced from hockey-reference.com.
+9 seasons of data were examined, from the 2009-2010 NHL season through the 2017-2018 NHL season. For the purposes of this evaluation, Perry's WAR model was used as a measurement of player value, and data was sourced from corsica.hockey. Younggren and Younggren's WAR model was considered as an alternative to Perry's, and was preferable in that it encompasses regular season results exclusively. However, Younggren and Younggren's WAR is meant to be descriptive of a player's performance in a single season, whereas Perry's WAR emphasizes predictivity, and offers a better approximation of true player talent. As such, Perry's version of WAR was the preferred option for this analysis. Injury data, including CHIP, was sourced from nhlinjuryviz.blogspot.com. Team performance data was sourced from hockey-reference.com.
 
 Assumptions:
 
@@ -36,14 +36,15 @@ Assumptions:
     + WAR is more reflective of regular season performance due to the comparatively smaller number of playoff games in the sample. 
 * The quality of the replacement player was not considered. My aim is not to reward deep organizations, nor to penalize shallow ones; this is strictly an injury evaluation.
 
-Younggren and Younggren's version of WAR was also considered, and is superior in several ways; it encompasses regular season results exclusively, and its formatting conventions would have made analysis easier. However, Younggren and Younggren's WAR is meant to be descriptive of a player's performance in a single season, whereas Perry's emphasizes predictivity and better approximates true player talent. As such, Perry's version of WAR was the preferred option for this analysis.
+Required packages and data sets were loaded, and the data was examined.
 
 ```{r warning=FALSE, message=FALSE}
-# Load packages required for munging and cleaning
+# Load required packages
 library(tidyverse)
-```
+library(MASS)
 
-```{r warning=FALSE, message=FALSE}
+select <- dplyr::select
+
 # Load WAR data, injury data, and team performance data into data frames
 war_df <- read_csv("war_ratings_2019-02-14.csv")
 colnames(war_df)
@@ -61,14 +62,14 @@ Required data was selected from the war_df data frame, and player trades and non
 # Create a new WAR df with the required data 
 war82_df <- war_df %>%
   # select() is masked by library(MASS) later in the analysis, so specify the requirement
-  dplyr::select(player = Player, season = Season, team = Team, games_played = GP, toi = TOI, war = WAR, war_82 = `WAR/82`, war_60 = `WAR/60`) %>%
+  select(player = Player, season = Season, team = Team, games_played = GP, toi = TOI, war = WAR, war_82 = `WAR/82`, war_60 = `WAR/60`) %>%
   # Account for mid-season trades
   separate(team, c("team_one","team_two", "team_three", "team_four"), sep = '/') %>%
   # Create games_missed var, for comparison to games_missed_injury; account for absences for personal reasons, etc.
   mutate(games_missed = 82 - games_played)
 ```
 
-A weighted WAR was calculated in order to stabilize WAR results and better reflect true player value, particularly for players who missed significant time during one or more seasons. Weighting is based on the Marcel projection method[^14] and considers three seasons of results, with more recent results being weighted more heavily. For players who have played three or more seasons, the weighted WAR is calculated using results from player-seasons n (41.7%), n-1 (33.3%), and n-2 (25%). For players who have played two seasons, the weighted WAR is calculated using results from player-seasons n (54.2%), and n-1 (45.8%). For players who have played a single season, no adjustments were made.
+A weighted WAR was calculated in order to stabilize WAR results and better reflect true player value, particularly for players who missed significant time during one or more seasons. Weighting was based on the Marcel projection method[^14] and considered three seasons of results, with more recent results being weighted more heavily. For players who have played three or more seasons, the weighted WAR for player-season n was calculated using results from player-seasons n (41.7%), n-1 (33.3%), and n-2 (25%). For players who have played two seasons, the weighted WAR for player-season n was calculated using results from player-seasons n (54.2%), and n-1 (45.8%). For players who have played one season, no adjustments were made.
 
 ```{r warning=FALSE}
 # Determine a weighted WAR for each player
@@ -91,7 +92,7 @@ war82_df <- war82_df %>%
   mutate(weighted_war_82 = weight_war(last3_war)) 
 ```
 
-Team names and player names in the war82_df data frame were then re-formatted, in order to facilitate clean joins later in the analysis. The accepted shorthand format for teams (looking at you, Elliote Friedman), and the FIRST.LAST format for players were used.
+Team names and player names in the war82_df data frame were then re-formatted, in order to facilitate clean joins later in the analysis. The accepted shorthand format for team names (looking at you, Elliote Friedman), and the FIRST.LAST format for player names were used.
 
 ```{r warning=FALSE}
 # Re-format war82_df team names
@@ -168,7 +169,7 @@ Required data was selected from the injury_df data frame.
 ```{r warning=FALSE}
 # Create a new injury df with the required data
 player_injury_df <- injury_df %>%
-  dplyr::select(chip = Chip, cap_hit = `Cap Hit`, games_missed_injury = `Games Missed`, injury_type = `Injury Type`, 
+  select(chip = Chip, cap_hit = `Cap Hit`, games_missed_injury = `Games Missed`, injury_type = `Injury Type`, 
          player = Player, position = Position, season = Season, team = Team, -`Number of Records`)
 ```
 
@@ -249,7 +250,7 @@ Required data was selected from the team_stats_df data frame.
 ```{r warning=FALSE}
 # Create a new team stats df with the required data 
 team_level_statistics_df <- team_stats_df %>%
-  dplyr::select(team = `X2`, season = `Season`, avg_age = `AvAge`, points = `PTS`, points_pct = `PTS%`) 
+  select(team = `X2`, season = `Season`, avg_age = `AvAge`, points = `PTS`, points_pct = `PTS%`) 
 
 # Re-format team_level_statistics_df team names
 team_names_short3 <- c("ANA" = "Anaheim Ducks", 
@@ -292,7 +293,7 @@ team_level_statistics_df <- team_level_statistics_df %>%
   arrange(team, season)
 ```
 
-Retired players were then filtered from the player_injury_df data frame, which was joined to the war82_df data frame.
+Retired players were then filtered from the player_injury_df data frame, which was joined to the war82_df data frame to create the injury_value_df data frame.
 
 ```{r warning=FALSE}
 # Filter retired players, create injury value df
@@ -304,16 +305,22 @@ injury_value_df <- player_injury_df %>%
   left_join(war82_df, by = c("first_initials", "last_name", "season"))
 ```
 
-Players who were injured but didn't have a WAR record were then filtered. Manny's cut-off for WAR was x number of events. Players were manually examined to determine that there weren't any formatting issues.
+Players who were injured but didn't have a WAR record were then filtered. Perry's cut-off for WAR computation was 200 minutes of ice-time. These filtered players were manually examined to confirm that there weren't any formatting issues causing a player to be missing a WAR record.
 
 ```{r warning=FALSE}
 # Filter players who don't have a WAR record because they didn't meet the 200 minutes  cut-off
 injury_value_df <- injury_value_df %>% 
   filter(!is.na(war_82)) %>%
-  dplyr::select(first_name = first_name.x, last_name, position_new, season,
+  select(first_name = first_name.x, last_name, position_new, season,
            team, team_one, team_two, team_three, team_four,
            games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war, war_82, weighted_war_82)
 ```
+
+The number of wins lost for each player-seaon due to injury was then calculated, with goaltender results being adjusted for expected workload.
+
+A weighted games played value was calculated in order to minimize season-to-season variance, and better reflect true goaltender workload. Weighting was again based on the Marcel projection method[^14]. Goaltenders who played more than 41 games on average over the previous three seasons (xth percentile) were expected to play 2/3 of games they missed due to injury (xth percentile), and as such their war_lost value was multiplied by a factor of 0.676. Goaltenders who played fewer than 41 games on average over the previous three seasons were expected to play 1/3 of games they missed due to injury, and as such their war_lost value was multiplied by a factor of 0.324.
+
+This method isn't perfect. For example, it diminishes the impact of former back-ups who were acquired to be a started, and got hurt with their new team, as in the case of Antti Raanta 17/18. As mentioned previously, Perry's WAR data also includes playoff games, which inflated game played totals.
 
 ```{r warning=FALSE}
 # Determine WAR lost for each player season
@@ -339,16 +346,14 @@ player_injury_value_df <- player_injury_value_df %>%
   ungroup() %>%
   rowwise() %>%
   mutate(weighted_games_played = weighted_gp(last3_gp))
-```
 
-This method isn't perfect. For example, it diminishes the impact of former back-ups who were acquired to be a started, and got hurt with their new team, as in the case of Antti Raanta 17/18. As mentioned previously, Perry's WAR data also includes playoff games, which inflates game played totals.
-
-```{r warning=FALSE}
 player_injury_value_df <- player_injury_value_df %>% 
   mutate(war_lost = case_when(position_new == "G" & weighted_games_played <= 41 ~ 0.324 * war_lost,
                               position_new == "G" & weighted_games_played > 41 ~ 0.676 * war_lost,
                               T ~ war_lost))
 ```
+
+Results were then compiled, on a team-season basis.
 
 ```{r warning=FALSE}
 # Attribute injuries to correct teams
@@ -358,7 +363,7 @@ team_injury_value_df <- player_injury_value_df %>%
             team_chip_lost = sum(total_chip),
             team_mgl_lost = sum(total_games_missed_injury))
 
-# Create working df for analysis
+# Create team_performance_df for analysis of relationship between change in value lost to injury, and change in team performance
 team_performance_df <- team_injury_value_df %>%
   left_join(team_level_statistics_df, by = c("team", "season")) 
 
@@ -368,27 +373,20 @@ team_performance_change_df <- team_performance_df %>%
   mutate(team_mgl_change = team_mgl_lost - lag(team_mgl_lost)) %>%
   mutate(points_pct_change = points_pct - lag(points_pct)) %>%
   filter(!is.na(points_pct_change))
-```
 
-```{r warning=FALSE, message=FALSE}
-
-# Create war df that includes goalie results for comparison to points_pct
-team_war_totals <- war82_df %>%
-  dplyr::select(team = team_one, season, war) %>%
+# Determineteam WAR totals for analysis of relationship between team WAR and points percentage, as referenced in introduction
+team_war_relationship <- war82_df %>%
+  select(team = team_one, season, war) %>%
   group_by(team, season) %>%
-  summarise(team_war = sum(war))
-
-team_war_relationship <- team_war_totals %>%
+  summarise(team_war = sum(war)) %>%
   left_join(team_level_statistics_df, by = c("team", "season")) %>%
-   filter(!is.na(points_pct))
+  filter(!is.na(points_pct))
 ```
 
 ### Results
 
 ```{r warning=FALSE, message=FALSE}
-# Load packages required for analysis
-library(MASS)
-
+#
 team_war_relationship_model <- lm(points_pct ~ team_war, team_war_relationship)
 summary(team_war_relationship_model)
 ```
