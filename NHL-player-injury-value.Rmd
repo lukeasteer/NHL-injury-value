@@ -2,7 +2,7 @@
 title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
   in the NHL'
 author: "Luke Steer (@lukeasteer)"
-date: "April 11, 2019"
+date: "April 16, 2019"
 output:
   html_document:
     theme: default
@@ -39,8 +39,11 @@ Assumptions:
 Required packages and data sets were loaded, and the data was examined.
 
 ```{r warning=FALSE, message=FALSE}
+
+
 # Load required packages
 library(tidyverse)
+library(ggthemes)
 library(MASS)
 
 select <- dplyr::select
@@ -385,19 +388,84 @@ team_war_relationship <- war82_df %>%
 
 ### Results
 
-```{r warning=FALSE, message=FALSE}
+```{r warning=FALSE, message=FALSE, fig.align='center'}
 #
-team_war_relationship_model <- lm(points_pct ~ team_war, team_war_relationship)
+team_war_relationship_model <- rlm(points_pct ~ team_war, team_war_relationship)
+
+team_war_relationship_plot <- team_war_relationship %>%
+  ggplot(aes(team_war, points_pct)) +
+  geom_point() +
+  stat_smooth(method = function(formula, data, weights = weight) rlm(formula,
+                                                                 data,
+                                                                 weights = weight,
+                                                                 method = "MM"),
+              fullrange = TRUE) +
+  labs(title = "Team WAR vs. Points Percentage")
+
+team_war_relationship_plot <- team_war_relationship_plot + theme_fivethirtyeight() + scale_colour_fivethirtyeight()
+
+print(team_war_relationship_plot)
 summary(team_war_relationship_model)
 ```
 
 I've elected to use a Robust Linear Model to lessen the influence of outliers.
 
-```{r warning=FALSE, message=FALSE}
-war_relationship_model <- rlm(points_pct_change ~ team_war_change, team_performance_change_df)
-summary(war_relationship_model)
+```{r warning=FALSE, message=FALSE, fig.align='center'}
+mgl_lost_relationship_model <- rlm(points_pct_change ~ team_mgl_change, team_performance_change_df, method = "MM")
+
+mgl_relationship_lost_plot <- team_performance_change_df %>%
+  ggplot(aes(team_mgl_change, points_pct_change)) +
+  geom_point() +
+  stat_smooth(method = function(formula, data, weights = weight) rlm(formula,
+                                                                 data,
+                                                                 weights = weight,
+                                                                 method = "MM"),
+              fullrange = TRUE) +
+  labs(title = "Change in Team MGL vs. Change In Points Percentage")
+
+mgl_lost_relationship_plot <- mgl_relationship_lost_plot + theme_fivethirtyeight() + scale_colour_fivethirtyeight()
+
+print(mgl_lost_relationship_plot)
+summary(mgl_lost_relationship_model)
 ```
 
+```{r warning=FALSE, message=FALSE, fig.align='center'}
+chip_lost_relationship_model <- rlm(points_pct_change ~ team_chip_change, team_performance_change_df, method = "MM")
+
+chip_relationship_lost_plot <- team_performance_change_df %>%
+  ggplot(aes(team_chip_change, points_pct_change)) +
+  geom_point() +
+  stat_smooth(method = function(formula, data, weights = weight) rlm(formula,
+                                                                 data,
+                                                                 weights = weight,
+                                                                 method = "MM"),
+              fullrange = TRUE) +
+  labs(title = "Change in Team CHIP vs. Change In Points Percentage")
+
+chip_relationship_lost_plot <- chip_relationship_lost_plot + theme_fivethirtyeight() + scale_colour_fivethirtyeight()
+
+print(chip_relationship_lost_plot)
+summary(chip_lost_relationship_model)
+```
+
+```{r warning=FALSE, message=FALSE, fig.align='center'}
+war_lost_relationship_model <- rlm(points_pct_change ~ team_war_change, team_performance_change_df, method = "MM")
+
+war_relationship_lost_plot <- team_performance_change_df %>%
+  ggplot(aes(team_war_change, points_pct_change)) +
+  geom_point() +
+  stat_smooth(method = function(formula, data, weights = weight) rlm(formula,
+                                                                 data,
+                                                                 weights = weight,
+                                                                 method = "MM"),
+              fullrange = TRUE) +
+  labs(title = "Change in Team WAR vs. Change In Points Percentage")
+
+war_relationship_lost_plot <- war_relationship_lost_plot + theme_fivethirtyeight() + scale_colour_fivethirtyeight()
+
+print(war_relationship_lost_plot)
+summary(war_lost_relationship_model)
+```
 https://stackoverflow.com/questions/17487418/mm-robust-estimation-in-ggplot2-using-stat-smooth-with-method-rlm
 
 Age vs. WAR lost
@@ -410,6 +478,9 @@ This analysis is also limited by its exclusion of goaltenders. This was purposef
 
 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0201264
 https://bjsm.bmj.com/content/50/5/273
+https://channels.theinnovationenterprise.com/interviews/james-bunce-head-of-sport-science-premier-league
+https://www.forbes.com/sites/stevemccaskill/2018/05/11/how-sports-science-helps-newcastle-united-prevent-injury-and-identify-academy-stars/#3e0539053b8c
+
 
 ### Acknowledgements 
 
