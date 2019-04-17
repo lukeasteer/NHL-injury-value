@@ -377,7 +377,7 @@ team_performance_change_df <- team_performance_df %>%
   mutate(points_pct_change = points_pct - lag(points_pct)) %>%
   filter(!is.na(points_pct_change))
 
-# Determineteam WAR totals for analysis of relationship between team WAR and points percentage, as referenced in introduction
+# Determine team WAR totals for analysis of relationship between team WAR and points percentage, as referenced in introduction
 team_war_relationship <- war82_df %>%
   select(team = team_one, season, war) %>%
   group_by(team, season) %>%
@@ -389,84 +389,77 @@ team_war_relationship <- war82_df %>%
 ### Results
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
-#
-team_war_relationship_model <- rlm(points_pct ~ team_war, team_war_relationship)
+team_war_relationship_model <- lm(points_pct ~ team_war, team_war_relationship)
 
 team_war_relationship_plot <- team_war_relationship %>%
   ggplot(aes(team_war, points_pct)) +
   geom_point() +
-  stat_smooth(method = function(formula, data, weights = weight) rlm(formula,
-                                                                 data,
-                                                                 weights = weight,
-                                                                 method = "MM"),
-              fullrange = TRUE) +
-  labs(title = "Team WAR vs. Points Percentage")
-
-team_war_relationship_plot <- team_war_relationship_plot + theme_fivethirtyeight() + scale_colour_fivethirtyeight()
+  stat_smooth(method = "lm") +
+  ggtitle("Team WAR vs. Points Percentage") +
+  theme_fivethirtyeight() +
+  scale_colour_fivethirtyeight() +
+  theme(axis.title = element_text()) + labs(x = "Team WAR", y = "Points Percentage") +
+  theme(axis.title.y = element_text(margin = margin(r = 10))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10)))
 
 print(team_war_relationship_plot)
 summary(team_war_relationship_model)
 ```
 
-I've elected to use a Robust Linear Model to lessen the influence of outliers.
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
-mgl_lost_relationship_model <- rlm(points_pct_change ~ team_mgl_change, team_performance_change_df, method = "MM")
+mgl_lost_relationship_model <- lm(points_pct_change ~ team_mgl_change, team_performance_change_df)
 
-mgl_relationship_lost_plot <- team_performance_change_df %>%
+mgl_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_mgl_change, points_pct_change)) +
   geom_point() +
-  stat_smooth(method = function(formula, data, weights = weight) rlm(formula,
-                                                                 data,
-                                                                 weights = weight,
-                                                                 method = "MM"),
-              fullrange = TRUE) +
-  labs(title = "Change in Team MGL vs. Change In Points Percentage")
-
-mgl_lost_relationship_plot <- mgl_relationship_lost_plot + theme_fivethirtyeight() + scale_colour_fivethirtyeight()
+  stat_smooth(method = "lm") +
+  ggtitle("TBD") +
+  theme_fivethirtyeight() +
+  scale_colour_fivethirtyeight() +
+  theme(axis.title = element_text()) + labs(x = "Change in Team MGL", y = "Change in Points Percentage") +
+  theme(axis.title.y = element_text(margin = margin(r = 10))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10)))
 
 print(mgl_lost_relationship_plot)
 summary(mgl_lost_relationship_model)
 ```
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
-chip_lost_relationship_model <- rlm(points_pct_change ~ team_chip_change, team_performance_change_df, method = "MM")
+chip_lost_relationship_model <- lm(points_pct_change ~ team_chip_change, team_performance_change_df)
 
-chip_relationship_lost_plot <- team_performance_change_df %>%
+chip_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_chip_change, points_pct_change)) +
   geom_point() +
-  stat_smooth(method = function(formula, data, weights = weight) rlm(formula,
-                                                                 data,
-                                                                 weights = weight,
-                                                                 method = "MM"),
-              fullrange = TRUE) +
-  labs(title = "Change in Team CHIP vs. Change In Points Percentage")
+  stat_smooth(method = "lm") +
+  ggtitle("TBD") +
+  theme_fivethirtyeight() +
+  scale_colour_fivethirtyeight() +
+  theme(axis.title = element_text()) + labs(x = "Change in Team CHIP", y = "Change in Points Percentage") +
+  theme(axis.title.y = element_text(margin = margin(r = 10))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10)))
 
-chip_relationship_lost_plot <- chip_relationship_lost_plot + theme_fivethirtyeight() + scale_colour_fivethirtyeight()
-
-print(chip_relationship_lost_plot)
+print(chip_lost_relationship_plot)
 summary(chip_lost_relationship_model)
 ```
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
-war_lost_relationship_model <- rlm(points_pct_change ~ team_war_change, team_performance_change_df, method = "MM")
+war_lost_relationship_model <- lm(points_pct_change ~ team_war_change, team_performance_change_df)
 
-war_relationship_lost_plot <- team_performance_change_df %>%
+war_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_war_change, points_pct_change)) +
   geom_point() +
-  stat_smooth(method = function(formula, data, weights = weight) rlm(formula,
-                                                                 data,
-                                                                 weights = weight,
-                                                                 method = "MM"),
-              fullrange = TRUE) +
-  labs(title = "Change in Team WAR vs. Change In Points Percentage")
+  stat_smooth(method = "lm") +
+  ggtitle("TBD") +
+  theme_fivethirtyeight() +
+  scale_colour_fivethirtyeight() +
+  theme(axis.title = element_text()) + labs(x = "Change in Team WAR Lost", y = "Change in Points Percentage") +
+  theme(axis.title.y = element_text(margin = margin(r = 10))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10)))
 
-war_relationship_lost_plot <- war_relationship_lost_plot + theme_fivethirtyeight() + scale_colour_fivethirtyeight()
-
-print(war_relationship_lost_plot)
+print(war_lost_relationship_plot)
 summary(war_lost_relationship_model)
 ```
-https://stackoverflow.com/questions/17487418/mm-robust-estimation-in-ggplot2-using-stat-smooth-with-method-rlm
 
 Age vs. WAR lost
 
