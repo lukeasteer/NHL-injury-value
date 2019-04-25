@@ -2,7 +2,7 @@
 title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
   in the NHL'
 author: "Luke Steer (@lukeasteer)"
-date: "April 16, 2019"
+date: "April 25, 2019"
 output:
   html_document:
     theme: default
@@ -39,16 +39,16 @@ Assumptions:
 Required packages and data sets were loaded, and the data was examined.
 
 ```{r warning=FALSE, message=FALSE}
-
-
 # Load required packages
 library(tidyverse)
 library(ggthemes)
 library(MASS)
+library(robustbase)
 
+# dplyr::select is masked by MASS::select, so specify the requirement
 select <- dplyr::select
 
-# Load WAR data, injury data, and team performance data into data frames
+# Load WAR data, injury data, and team performance data 
 war_df <- read_csv("war_ratings_2019-02-14.csv")
 colnames(war_df)
 
@@ -62,13 +62,19 @@ colnames(team_stats_df)
 Required data was selected from the war_df data frame, and player trades and non-injury absences were accounted for. 
 
 ```{r warning=FALSE}
-# Create a new WAR df with the required data 
+# Create a df with the required WAR data 
 war82_df <- war_df %>%
-  # select() is masked by library(MASS) later in the analysis, so specify the requirement
-  select(player = Player, season = Season, team = Team, games_played = GP, toi = TOI, war = WAR, war_82 = `WAR/82`, war_60 = `WAR/60`) %>%
-  # Account for mid-season trades
+  select(player = Player, 
+         season = Season, 
+         team = Team, 
+         games_played = GP, 
+         toi = TOI, 
+         war = WAR, 
+         war_82 = `WAR/82`, 
+         war_60 = `WAR/60`) %>%
+  # Account for mid-season player trades
   separate(team, c("team_one","team_two", "team_three", "team_four"), sep = '/') %>%
-  # Create games_missed var, for comparison to games_missed_injury; account for absences for personal reasons, etc.
+  # Create games_missed var, for comparison to games_missed_injury; account for non-injury absences 
   mutate(games_missed = 82 - games_played)
 ```
 
@@ -172,8 +178,15 @@ Required data was selected from the injury_df data frame.
 ```{r warning=FALSE}
 # Create a new injury df with the required data
 player_injury_df <- injury_df %>%
-  select(chip = Chip, cap_hit = `Cap Hit`, games_missed_injury = `Games Missed`, injury_type = `Injury Type`, 
-         player = Player, position = Position, season = Season, team = Team, -`Number of Records`)
+  select(chip = Chip, 
+         cap_hit = `Cap Hit`, 
+         games_missed_injury = `Games Missed`, 
+         injury_type = `Injury Type`, 
+         player = Player, 
+         position = Position, 
+         season = Season, 
+         team = Team, 
+         -`Number of Records`)
 ```
 
 Team names, player names, and season dates in the player_injury_df data frame were then re-formatted. Player position was also re-formatted, to account for players who are no longer active. Injuries were aggregated on a player-season basis.
@@ -234,17 +247,25 @@ player_injury_df$player[player_injury_df$player == "Oshie, T.J."] <- "Oshie, TJ"
 
 player_injury_df <- player_injury_df %>%  
 separate(player, c("last_name","first_name"), sep = ', ') %>%
-  mutate(last_name = str_to_upper(last_name)) %>%
-  mutate(first_name = str_to_upper(first_name)) %>%
-  mutate(first_initials = substr(first_name, 1, 2)) %>%
+  mutate(last_name = str_to_upper(last_name),
+         first_name = str_to_upper(first_name),
+         first_initials = substr(first_name, 1, 2)) %>%
   # Re-format season
   separate(season, c("start_year","end_year"), sep = '/') %>%
   mutate(season = paste0(start_year, '-20', end_year)) %>%
   # Re-format position; split into position and status; blanks accounts for weird formatting issue where there isn't an NA
   separate(position, c("position_new", "status", "blanks"), sep = '"') %>%
   # Aggregate injuries on a per-season basis 
-  group_by(first_name, first_initials, last_name, team, season, status, position_new, cap_hit) %>%
-  summarise(total_games_missed_injury = sum(games_missed_injury), total_chip = sum(chip)) %>%
+  group_by(first_name, 
+           first_initials, 
+           last_name, 
+           team, 
+           season, 
+           status, 
+           position_new, 
+           cap_hit) %>%
+  summarise(total_games_missed_injury = sum(games_missed_injury), 
+            total_chip = sum(chip)) %>%
   ungroup()
 ```
 
@@ -253,7 +274,11 @@ Required data was selected from the team_stats_df data frame.
 ```{r warning=FALSE}
 # Create a new team stats df with the required data 
 team_level_statistics_df <- team_stats_df %>%
-  select(team = `X2`, season = `Season`, avg_age = `AvAge`, points = `PTS`, points_pct = `PTS%`) 
+  select(team = `X2`, 
+         season = `Season`, 
+         avg_age = `AvAge`, 
+         points = `PTS`, 
+         points_pct = `PTS%`) 
 
 # Re-format team_level_statistics_df team names
 team_names_short3 <- c("ANA" = "Anaheim Ducks", 
@@ -272,9 +297,9 @@ team_names_short3 <- c("ANA" = "Anaheim Ducks",
                        "FLA" = "Florida Panthers", 
                        "LAK" = "Los Angeles Kings", 
                        "MIN" = "Minnesota Wild",
-                       "MTL" = "Montreal canadiens", 
+                       "MTL" = "Montreal Canadiens", 
                        "NSH" = "Nashville Predators", 
-                       "NJD" = "New Jersey Deviles", 
+                       "NJD" = "New Jersey Devils", 
                        "NYI" = "New York Islanders", 
                        "NYR" = "New York Rangers", 
                        "OTT" = "Ottawa Senators", 
@@ -305,7 +330,8 @@ player_injury_df <- player_injury_df %>%
   filter(status == "active")
 
 injury_value_df <- player_injury_df %>%
-  left_join(war82_df, by = c("first_initials", "last_name", "season"))
+  left_join(war82_df, 
+            by = c("first_initials", "last_name", "season"))
 ```
 
 Players who were injured but didn't have a WAR record were then filtered. Perry's cut-off for WAR computation was 200 minutes of ice-time. These filtered players were manually examined to confirm that there weren't any formatting issues causing a player to be missing a WAR record.
@@ -314,22 +340,37 @@ Players who were injured but didn't have a WAR record were then filtered. Perry'
 # Filter players who don't have a WAR record because they didn't meet the 200 minutes  cut-off
 injury_value_df <- injury_value_df %>% 
   filter(!is.na(war_82)) %>%
-  select(first_name = first_name.x, last_name, position_new, season,
-           team, team_one, team_two, team_three, team_four,
-           games_played, games_missed, total_games_missed_injury, cap_hit, total_chip, toi, war, war_82, weighted_war_82)
+  select(first_name = first_name.x, 
+         last_name, 
+         position_new, 
+         season,
+         team, 
+         team_one, 
+         team_two, 
+         team_three, 
+         team_four,
+         games_played, 
+         games_missed, 
+         total_games_missed_injury, 
+         cap_hit, 
+         total_chip, 
+         toi, 
+         war, 
+         war_82, 
+         weighted_war_82)
 ```
 
 The number of wins lost for each player-seaon due to injury was then calculated, with goaltender results being adjusted for expected workload.
 
-A weighted games played value was calculated in order to minimize season-to-season variance, and better reflect true goaltender workload. Weighting was again based on the Marcel projection method[^14]. Goaltenders who played more than 41 games on average over the previous three seasons (xth percentile) were expected to play 2/3 of games they missed due to injury (xth percentile), and as such their war_lost value was multiplied by a factor of 0.676. Goaltenders who played fewer than 41 games on average over the previous three seasons were expected to play 1/3 of games they missed due to injury, and as such their war_lost value was multiplied by a factor of 0.324.
+A weighted games played value was calculated in order to minimize season-to-season variance, and better reflect true goaltender workload. Weighting was again based on the Marcel projection method. Goaltenders who played more than 41 games on average over the previous three seasons (xth percentile) were expected to play 2/3 of games they missed due to injury (xth percentile), and as such their war_lost value was multiplied by a factor of 0.676. Goaltenders who played fewer than 41 games on average over the previous three seasons were expected to play 1/3 of games they missed due to injury, and as such their war_lost value was multiplied by a factor of 0.324.
 
 This method isn't perfect. For example, it diminishes the impact of former back-ups who were acquired to be a started, and got hurt with their new team, as in the case of Antti Raanta 17/18. As mentioned previously, Perry's WAR data also includes playoff games, which inflated game played totals.
 
 ```{r warning=FALSE}
 # Determine WAR lost for each player season
 player_injury_value_df <- injury_value_df %>%
-  mutate(war_GP = weighted_war_82 / 82) %>%
-  mutate(war_lost = total_games_missed_injury * war_GP)
+  mutate(war_GP = weighted_war_82 / 82,
+         war_lost = total_games_missed_injury * war_GP)
 
 # Determine a weighted games_played for each player
 weighted_gp <- function(last3_gp) {
@@ -371,15 +412,18 @@ team_performance_df <- team_injury_value_df %>%
   left_join(team_level_statistics_df, by = c("team", "season")) 
 
 team_performance_change_df <- team_performance_df %>%
-  mutate(team_war_change = team_war_lost - lag(team_war_lost)) %>%
-  mutate(team_chip_change = team_chip_lost - lag(team_chip_lost)) %>%
-  mutate(team_mgl_change = team_mgl_lost - lag(team_mgl_lost)) %>%
-  mutate(points_pct_change = points_pct - lag(points_pct)) %>%
+  mutate(last_team_war_lost = lag(team_war_lost),
+         team_war_change = team_war_lost - lag(team_war_lost),
+         team_chip_change = team_chip_lost - lag(team_chip_lost),
+         team_mgl_change = team_mgl_lost - lag(team_mgl_lost),
+         points_pct_change = points_pct - lag(points_pct)) %>%
   filter(!is.na(points_pct_change))
 
 # Determine team WAR totals for analysis of relationship between team WAR and points percentage, as referenced in introduction
 team_war_relationship <- war82_df %>%
-  select(team = team_one, season, war) %>%
+  select(team = team_one, 
+         season, 
+         war) %>%
   group_by(team, season) %>%
   summarise(team_war = sum(war)) %>%
   left_join(team_level_statistics_df, by = c("team", "season")) %>%
@@ -389,13 +433,40 @@ team_war_relationship <- war82_df %>%
 ### Results
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
+player_injury_value_df %>%
+  select(first_name, 
+         last_name, 
+         position = position_new, 
+         season, 
+         team, 
+         war_lost, 
+         games_missed_during_injury = total_games_missed_injury) %>%
+  arrange(desc(war_lost)) %>%
+  head(20) %>%
+  print()
+```
+
+```{r warning=FALSE, message=FALSE, fig.align='center'}
+team_performance_df %>%
+  select(team, 
+         season, 
+         team_war_lost, 
+         team_chip_lost, 
+         team_mgl_lost) %>%
+  arrange(desc(team_war_lost)) %>%
+  head(20) %>%
+  print()
+```
+
+```{r warning=FALSE, message=FALSE, fig.align='center'}
 team_war_relationship_model <- lm(points_pct ~ team_war, team_war_relationship)
+team_war_relationship_model_2 <- rlm(points_pct ~ team_war, team_war_relationship, method = "MM")
+team_war_relationship_model_3 <- lmrob(points_pct ~ team_war, team_war_relationship)
 
 team_war_relationship_plot <- team_war_relationship %>%
   ggplot(aes(team_war, points_pct)) +
   geom_point() +
   stat_smooth(method = "lm") +
-  ggtitle("Team WAR vs. Points Percentage") +
   theme_fivethirtyeight() +
   scale_colour_fivethirtyeight() +
   theme(axis.title = element_text()) + labs(x = "Team WAR", y = "Points Percentage") +
@@ -404,8 +475,67 @@ team_war_relationship_plot <- team_war_relationship %>%
 
 print(team_war_relationship_plot)
 summary(team_war_relationship_model)
+summary(team_war_relationship_model_2)
+summary(team_war_relationship_model_3)
 ```
 
+Robust regression is an alternative to least squares regression when data are contaminated with outliers or influential observations, and it can also be used for the purpose of detecting influential observations. In instances where we're evaluating the relationship between Team WAR lost and another variable, PIT 2011-2012, PIT 2010-2011, and MTL 2015-2016 are possibly problermatic to an ordinary least squares model, and robust regression is a suitable method.
+
+```{r warning=FALSE, message=FALSE, fig.align='center'}
+# https://stats.idre.ucla.edu/r/dae/robust-regression/
+# https://stackoverflow.com/questions/17487418/mm-robust-estimation-in-ggplot2-using-stat-smooth-with-method-rlm
+# https://stats.stackexchange.com/questions/83826/is-a-weighted-r2-in-robust-linear-model-meaningful-for-goodness-of-fit-analysinsta
+
+avg_age_relationship_model <- rlm(team_war_lost ~ avg_age, team_performance_df, method = "MM")
+avg_age_relationship_model_2 <- lmrob(team_war_lost ~ avg_age, team_performance_df)
+
+avg_age_relationship_plot <- team_performance_df %>%
+  ggplot(aes(avg_age, team_war_lost)) +
+  geom_point() +
+  stat_smooth(method = function(formula, 
+                                data, 
+                                weights = weight) rlm(formula, 
+                                                      data, 
+                                                      weights = weight, 
+                                                      method = "MM"), 
+              fullrange = TRUE) +
+  theme_fivethirtyeight() +
+  scale_colour_fivethirtyeight() +
+  theme(axis.title = element_text()) + 
+  labs(x = "Average Team Age", y = "WAR Lost to Injury") +
+  theme(axis.title.y = element_text(margin = margin(r = 10))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10)))
+
+print(avg_age_relationship_plot)
+summary(avg_age_relationship_model)
+summary(avg_age_relationship_model_2)
+```
+
+```{r warning=FALSE, message=FALSE, fig.align='center'}
+last_war_lost_model <- rlm(team_war_lost ~ last_team_war_lost, team_performance_change_df, method = "MM")
+last_war_lost_model_2 <- lmrob(team_war_lost ~ last_team_war_lost, team_performance_change_df)
+
+last_war_lost_plot <- team_performance_change_df %>%
+  ggplot(aes(last_team_war_lost, team_war_lost)) +
+  geom_point() +
+  stat_smooth(method = function(formula, 
+                                data, 
+                                weights = weight) rlm(formula, 
+                                                      data, 
+                                                      weights = weight, 
+                                                      method = "MM"), 
+              fullrange = TRUE) +
+  theme_fivethirtyeight() +
+  scale_colour_fivethirtyeight() +
+  theme(axis.title = element_text()) + 
+  labs(x = "Team WAR Lost n-1", y = "Team WAR Lost n") +
+  theme(axis.title.y = element_text(margin = margin(r = 10))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10)))
+
+print(last_war_lost_plot)
+summary(last_war_lost_model)
+summary(last_war_lost_model_2)
+```
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
 mgl_lost_relationship_model <- lm(points_pct_change ~ team_mgl_change, team_performance_change_df)
@@ -414,16 +544,17 @@ mgl_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_mgl_change, points_pct_change)) +
   geom_point() +
   stat_smooth(method = "lm") +
-  ggtitle("TBD") +
   theme_fivethirtyeight() +
   scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + labs(x = "Change in Team MGL", y = "Change in Points Percentage") +
+  theme(axis.title = element_text()) + 
+  labs(x = "Change in Team MGL", y = "Change in Points Percentage") +
   theme(axis.title.y = element_text(margin = margin(r = 10))) +
   theme(axis.title.x = element_text(margin = margin(t = 10)))
 
 print(mgl_lost_relationship_plot)
 summary(mgl_lost_relationship_model)
 ```
+
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
 chip_lost_relationship_model <- lm(points_pct_change ~ team_chip_change, team_performance_change_df)
@@ -432,10 +563,10 @@ chip_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_chip_change, points_pct_change)) +
   geom_point() +
   stat_smooth(method = "lm") +
-  ggtitle("TBD") +
   theme_fivethirtyeight() +
   scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + labs(x = "Change in Team CHIP", y = "Change in Points Percentage") +
+  theme(axis.title = element_text()) + 
+  labs(x = "Change in Team CHIP", y = "Change in Points Percentage") +
   theme(axis.title.y = element_text(margin = margin(r = 10))) +
   theme(axis.title.x = element_text(margin = margin(t = 10)))
 
@@ -450,16 +581,18 @@ war_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_war_change, points_pct_change)) +
   geom_point() +
   stat_smooth(method = "lm") +
-  ggtitle("TBD") +
   theme_fivethirtyeight() +
   scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + labs(x = "Change in Team WAR Lost", y = "Change in Points Percentage") +
+  theme(axis.title = element_text()) + 
+  labs(x = "Change in Team WAR Lost", y = "Change in Points Percentage") +
   theme(axis.title.y = element_text(margin = margin(r = 10))) +
   theme(axis.title.x = element_text(margin = margin(t = 10)))
 
 print(war_lost_relationship_plot)
 summary(war_lost_relationship_model)
 ```
+
+Interestingly, there does not appear to be a strong relationship between the change value lost to injury, and team points percentage.
 
 Age vs. WAR lost
 
