@@ -2,7 +2,7 @@
 title: 'Winning the battle, but losing the WAR: Examining the value of skater injuries
   in the NHL'
 author: "Luke Steer (@lukeasteer)"
-date: "April 25, 2019"
+date: "June 11, 2019"
 output:
   html_document:
     theme: default
@@ -27,14 +27,17 @@ Mistakes and misdiagnoses can be costly, for both the team and the player. The P
 
 ### Method
 
+#### Data Selection and Collection
+
 9 seasons of data were examined, from the 2009-2010 NHL season through the 2017-2018 NHL season. For the purposes of this evaluation, Perry's WAR model was used as a measurement of player value, and data was sourced from corsica.hockey. Younggren and Younggren's WAR model was considered as an alternative to Perry's, and was preferable in that it encompasses regular season results exclusively. However, Younggren and Younggren's WAR is meant to be descriptive of a player's performance in a single season, whereas Perry's WAR emphasizes predictivity, and offers a better approximation of true player talent. As such, Perry's version of WAR was the preferred option for this analysis. Injury data, including CHIP, was sourced from nhlinjuryviz.blogspot.com. Team performance data was sourced from hockey-reference.com.
 
-Assumptions:
-
-* Perry does not differentiate between regular season games and playoff games when calculating WAR, all games are incorporated into a single value for the season. I’ve assumed that:
+Perry does not differentiate between regular season games and playoff games when calculating WAR, all games are incorporated into a single value for the season. I’ve assumed that:
     + On aggregate, player performance is relatively stable between the regular season and the playoffs. 
     + WAR is more reflective of regular season performance due to the comparatively smaller number of playoff games in the sample. 
-* The quality of the replacement player was not considered. My aim is not to reward deep organizations, nor to penalize shallow ones; this is strictly an injury evaluation.
+
+The quality of the replacement player was not considered. My aim is not to reward deep organizations, nor to penalize shallow ones; this is strictly an injury evaluation.
+
+#### Data Munging and Cleaning
 
 Required packages and data sets were loaded, and the data was examined.
 
@@ -44,6 +47,8 @@ library(tidyverse)
 library(ggthemes)
 library(MASS)
 library(robustbase)
+library(knitr)
+library(kableExtra)
 
 # dplyr::select is masked by MASS::select, so specify the requirement
 select <- dplyr::select
@@ -395,6 +400,14 @@ player_injury_value_df <- player_injury_value_df %>%
   mutate(war_lost = case_when(position_new == "G" & weighted_games_played <= 41 ~ 0.324 * war_lost,
                               position_new == "G" & weighted_games_played > 41 ~ 0.676 * war_lost,
                               T ~ war_lost))
+
+player_injury_change_df <- player_injury_value_df %>%
+  select(first_name, last_name, season, position = position_new, war_lost) %>%
+   # Account for players who were traded
+  group_by(first_name, last_name, season) %>%
+  summarise(war_lost = sum(war_lost)) %>%
+  mutate(last_war_lost = lag(war_lost)) %>%
+  filter(!is.na(last_war_lost))
 ```
 
 Results were then compiled, on a team-season basis.
@@ -432,7 +445,10 @@ team_war_relationship <- war82_df %>%
 
 ### Results
 
-```{r warning=FALSE, message=FALSE, fig.align='center'}
+```{r warning=FALSE, message=FALSE, results='asis', fig.align='center'}
+# https://wordvice.com/writing-the-results-section-for-a-research-paper/
+# https://haozhu233.github.io/kableExtra/awesome_table_in_html.html#header_rows
+
 player_injury_value_df %>%
   select(first_name, 
          last_name, 
@@ -443,10 +459,21 @@ player_injury_value_df %>%
          games_missed_during_injury = total_games_missed_injury) %>%
   arrange(desc(war_lost)) %>%
   head(20) %>%
-  print()
+  kable(col.names = c("First Name", 
+                      "Last Name", 
+                      "Position", 
+                      "Season", 
+                      "Team", 
+                      "WAR Lost", 
+                      "Injury Length (Games Missed)"),
+        digits = 2) %>%
+  kable_styling(bootstrap_options = c("striped", 
+                                      "hover", 
+                                      "condensed", 
+                                      "responsive"))
 ```
 
-```{r warning=FALSE, message=FALSE, fig.align='center'}
+```{r warning=FALSE, message=FALSE, results='asis', fig.align='center'}
 team_performance_df %>%
   select(team, 
          season, 
@@ -455,8 +482,21 @@ team_performance_df %>%
          team_mgl_lost) %>%
   arrange(desc(team_war_lost)) %>%
   head(20) %>%
-  print()
+  kable(col.names = c("Team", 
+                      "Season", 
+                      "Team WAR Lost", 
+                      "Team CHIP Lost", 
+                      "Team MGL Lost"),
+        digits = 2) %>%
+  kable_styling(bootstrap_options = c("striped", 
+                                      "hover", 
+                                      "condensed", 
+                                      "responsive"))
 ```
+
+Least squares regression seemed like a suitable method, given that .....
+
+"The price you pay for robust regression is wider confidence bands, people have looked into the problem of getting tighter confidence bands whilst keeping the regression robust. This leads to considerations of M-estimators, 2) is a proposed solution. If you have lots of data then your confidence bands will be less of an issue and robust regression seems wholly preferable." (https://www.quora.com/How-is-Robust-Regression-different-from-standard-OLS)
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
 team_war_relationship_model <- lm(points_pct ~ team_war, team_war_relationship)
@@ -467,11 +507,11 @@ team_war_relationship_plot <- team_war_relationship %>%
   ggplot(aes(team_war, points_pct)) +
   geom_point() +
   stat_smooth(method = "lm") +
-  theme_fivethirtyeight() +
-  scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + labs(x = "Team WAR", y = "Points Percentage") +
-  theme(axis.title.y = element_text(margin = margin(r = 10))) +
-  theme(axis.title.x = element_text(margin = margin(t = 10)))
+  theme_few() +
+  theme(axis.title = element_text(),
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10))) +
+  labs(x = "Team WAR", y = "Points Percentage") 
 
 print(team_war_relationship_plot)
 summary(team_war_relationship_model)
@@ -479,63 +519,64 @@ summary(team_war_relationship_model_2)
 summary(team_war_relationship_model_3)
 ```
 
-Robust regression is an alternative to least squares regression when data are contaminated with outliers or influential observations, and it can also be used for the purpose of detecting influential observations. In instances where we're evaluating the relationship between Team WAR lost and another variable, PIT 2011-2012, PIT 2010-2011, and MTL 2015-2016 are possibly problermatic to an ordinary least squares model, and robust regression is a suitable method.
+Robust regression is an alternative to least squares regression when data are contaminated with outliers or influential observations, and it can also be used for the purpose of detecting influential observations. In instances where we're evaluating the relationship between Team WAR lost and another variable, PIT 2011-2012, PIT 2010-2011, and MTL 2015-2016 are possibly problematic to an ordinary least squares model, and robust regression is a suitable method.
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
 # https://stats.idre.ucla.edu/r/dae/robust-regression/
 # https://stackoverflow.com/questions/17487418/mm-robust-estimation-in-ggplot2-using-stat-smooth-with-method-rlm
 # https://stats.stackexchange.com/questions/83826/is-a-weighted-r2-in-robust-linear-model-meaningful-for-goodness-of-fit-analysinsta
 
-avg_age_relationship_model <- rlm(team_war_lost ~ avg_age, team_performance_df, method = "MM")
-avg_age_relationship_model_2 <- lmrob(team_war_lost ~ avg_age, team_performance_df)
+avg_age_relationship_model <- lmrob(team_war_lost ~ avg_age, team_performance_df, method = "MM")
 
 avg_age_relationship_plot <- team_performance_df %>%
   ggplot(aes(avg_age, team_war_lost)) +
   geom_point() +
-  stat_smooth(method = function(formula, 
-                                data, 
-                                weights = weight) rlm(formula, 
-                                                      data, 
-                                                      weights = weight, 
-                                                      method = "MM"), 
-              fullrange = TRUE) +
-  theme_fivethirtyeight() +
-  scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + 
-  labs(x = "Average Team Age", y = "WAR Lost to Injury") +
-  theme(axis.title.y = element_text(margin = margin(r = 10))) +
-  theme(axis.title.x = element_text(margin = margin(t = 10)))
+  stat_smooth(method = robustbase::lmrob) +
+  theme_few() +
+  theme(axis.title = element_text(),
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10))) +
+  labs(x = "Average Team Age", y = "WAR Lost to Injury") 
 
 print(avg_age_relationship_plot)
 summary(avg_age_relationship_model)
-summary(avg_age_relationship_model_2)
 ```
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
-last_war_lost_model <- rlm(team_war_lost ~ last_team_war_lost, team_performance_change_df, method = "MM")
-last_war_lost_model_2 <- lmrob(team_war_lost ~ last_team_war_lost, team_performance_change_df)
+last_war_lost_model <- lmrob(team_war_lost ~ last_team_war_lost, team_performance_change_df, method = "MM")
 
 last_war_lost_plot <- team_performance_change_df %>%
   ggplot(aes(last_team_war_lost, team_war_lost)) +
   geom_point() +
-  stat_smooth(method = function(formula, 
-                                data, 
-                                weights = weight) rlm(formula, 
-                                                      data, 
-                                                      weights = weight, 
-                                                      method = "MM"), 
-              fullrange = TRUE) +
-  theme_fivethirtyeight() +
-  scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + 
-  labs(x = "Team WAR Lost n-1", y = "Team WAR Lost n") +
-  theme(axis.title.y = element_text(margin = margin(r = 10))) +
-  theme(axis.title.x = element_text(margin = margin(t = 10)))
+  stat_smooth(method = robustbase::lmrob) +
+  theme_few() +
+  theme(axis.title = element_text(),
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10))) +
+  labs(x = "Team WAR Lost, Season n-1", y = "Team WAR Lost, Season n") 
 
 print(last_war_lost_plot)
 summary(last_war_lost_model)
-summary(last_war_lost_model_2)
+
 ```
+
+```{r warning=FALSE, message=FALSE, fig.align='center'}
+war_lost_change_model <- lmrob(war_lost ~ last_war_lost, player_injury_change_df, method = "MM")
+
+war_lost_change_plot <- player_injury_change_df %>%
+  ggplot(aes(last_war_lost, war_lost)) +
+  geom_point() +
+  stat_smooth(method = robustbase::lmrob) +
+  theme_few() +
+  theme(axis.title = element_text(),
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10))) +
+  labs(x = "Player WAR Lost, Season n-1", y = "Player WAR Lost, Season n") 
+
+print(war_lost_change_plot)
+summary(war_lost_change_model)
+```
+
 
 ```{r warning=FALSE, message=FALSE, fig.align='center'}
 mgl_lost_relationship_model <- lm(points_pct_change ~ team_mgl_change, team_performance_change_df)
@@ -544,12 +585,11 @@ mgl_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_mgl_change, points_pct_change)) +
   geom_point() +
   stat_smooth(method = "lm") +
-  theme_fivethirtyeight() +
-  scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + 
-  labs(x = "Change in Team MGL", y = "Change in Points Percentage") +
-  theme(axis.title.y = element_text(margin = margin(r = 10))) +
-  theme(axis.title.x = element_text(margin = margin(t = 10)))
+  theme_few() +
+  theme(axis.title = element_text(),
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10))) +
+  labs(x = "Change in Team MGL", y = "Change in Points Percentage") 
 
 print(mgl_lost_relationship_plot)
 summary(mgl_lost_relationship_model)
@@ -563,12 +603,11 @@ chip_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_chip_change, points_pct_change)) +
   geom_point() +
   stat_smooth(method = "lm") +
-  theme_fivethirtyeight() +
-  scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + 
-  labs(x = "Change in Team CHIP", y = "Change in Points Percentage") +
-  theme(axis.title.y = element_text(margin = margin(r = 10))) +
-  theme(axis.title.x = element_text(margin = margin(t = 10)))
+  theme_few() +
+  theme(axis.title = element_text(),
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10))) +
+  labs(x = "Change in Team CHIP", y = "Change in Points Percentage") 
 
 print(chip_lost_relationship_plot)
 summary(chip_lost_relationship_model)
@@ -581,12 +620,11 @@ war_lost_relationship_plot <- team_performance_change_df %>%
   ggplot(aes(team_war_change, points_pct_change)) +
   geom_point() +
   stat_smooth(method = "lm") +
-  theme_fivethirtyeight() +
-  scale_colour_fivethirtyeight() +
-  theme(axis.title = element_text()) + 
-  labs(x = "Change in Team WAR Lost", y = "Change in Points Percentage") +
-  theme(axis.title.y = element_text(margin = margin(r = 10))) +
-  theme(axis.title.x = element_text(margin = margin(t = 10)))
+  theme_few() +
+  theme(axis.title = element_text(),
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10))) +
+  labs(x = "Change in Team WAR Lost", y = "Change in Points Percentage") 
 
 print(war_lost_relationship_plot)
 summary(war_lost_relationship_model)
@@ -598,9 +636,7 @@ Age vs. WAR lost
 
 ### Discussion
 
-Aaron Kneeland’s research found no consistent correlation between travel, rest periods, and man games lost, though it should be noted that his study only examined two seasons of data (2014). 
-
-This analysis is also limited by its exclusion of goaltenders. This was purposeful, given that the demands of the positions differ significantly, and injuries tend to be correspondingly different. However, goalie injuries are clearly impactful, and goaltender workload is a large, large issue that needs solving. 
+* Aaron Kneeland’s research found no consistent correlation between travel, rest periods, and man games lost, though it should be noted that his study only examined two seasons of data (2014). 
 
 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0201264
 https://bjsm.bmj.com/content/50/5/273
